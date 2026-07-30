@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Legends - Stand-Up Report Generator</title>
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --card-bg: rgba(28, 28, 30, 0.85);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --apple-blue: #0a84ff;
+            --apple-blue-hover: #409cff;
+            --text-primary: #f2f2f7;
+            --text-secondary: #8e8e93;
+            --input-bg: #2c2c2e;
+            --input-border: #3a3a3c;
+            --strike-color: #48484a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 40px 16px;
+            display: flex;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 36px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--card-border);
+        }
+
+        header {
+            text-align: center;
+            padding-bottom: 24px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        p.subtitle {
+            margin-top: 6px;
+            color: var(--apple-blue);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        p.author {
+            margin-top: 4px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            letter-spacing: -0.1px;
+        }
+
+        input[type="date"],
+        input[type="time"],
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-primary);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .attendance-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: #1c1c1e;
+            padding: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+        }
+
+        .checklist-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .checklist {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 15px;
+        }
+
+        .check-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .check-item input[type="checkbox"]:checked {
+            background-color: var(--apple-blue);
+            border-color: var(--apple-blue);
+        }
+
+        .check-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .check-item label {
+            margin-bottom: 0;
+            color: var(--text-primary);
+            font-weight: 400;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .check-item.disabled label {
+            text-decoration: line-through;
+            color: var(--strike-color);
+        }
+
+        .updates-container {
+            border-top: 1px solid var(--card-border);
+            padding-top: 24px;
+            margin-top: 24px;
+        }
+
+        .member-update-card {
+            background: #1c1c1e;
+            border: 1px solid var(--card-border);
+            padding: 16px;
+            margin-bottom: 14px;
+            border-radius: 12px;
+        }
+
+        .member-update-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--apple-blue);
+            letter-spacing: -0.2px;
+        }
+
+        button.btn-pdf {
+            width: 100%;
+            background-color: var(--apple-blue);
+            color: #ffffff;
+            border: none;
+            padding: 14px 20px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        }
+
+        button.btn-pdf:hover {
+            background-color: var(--apple-blue-hover);
+            transform: scale(1.01);
+            box-shadow: 0 6px 16px rgba(10, 132, 255, 0.4);
+        }
+
+        button.btn-pdf:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Coding Legends</h1>
+        <p class="subtitle">Daily Stand Up Report</p>
+        <p class="author">Prepared by Sahansa (PM)</p>
+    </header>
+
+    <form id="standupForm">
+        <div class="grid-2 form-group">
+            <div>
+                <label for="reportDate">Date</label>
+                <input type="date" id="reportDate" required>
+            </div>
+            <div>
+                <label for="reportTime">Time</label>
+                <input type="time" id="reportTime" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Attendance Register</label>
+            <div class="attendance-section">
+                <div>
+                    <div class="checklist-title">Attending</div>
+                    <div class="checklist" id="attendingList"></div>
+                </div>
+                <div>
+                    <div class="checklist-title">Not Attending</div>
+                    <div class="checklist" id="absentList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="updates-container form-group">
+            <label>Member Updates</label>
+            <div id="updatesList"></div>
+        </div>
+
+        <button type="button" class="btn-pdf" onclick="generatePDF()">Generate PDF Report</button>
+    </form>
+</div>
+
+<script>
+    const teamMembers = [
+        "Rajitha", "Vinul", "Navodya", "Sahansa", 
+        "Vishwa", "Isuri", "Kumuditha", "Nufail", 
+        "Ruth", "Chamikara", "Pubba", "Ama"
+    ];
+
+    const updateMembers = teamMembers.filter(member => member !== "Sahansa");
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const now = new Date();
+        document.getElementById('reportDate').value = now.toISOString().split('T')[0];
+        document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
+
+        renderAttendance();
+        renderUpdateInputs();
+    });
+
+    function renderAttendance() {
+        const attendingListEl = document.getElementById('attendingList');
+        const absentListEl = document.getElementById('absentList');
+
+        teamMembers.forEach((member, index) => {
+            attendingListEl.innerHTML += `
+                <div class="check-item" id="att_wrapper_${index}">
+                    <input type="checkbox" id="att_${index}" value="${member}" checked onchange="syncAttendance(${index}, 'att')">
+                    <label for="att_${index}">${member}</label>
+                </div>
+            `;
+
+            absentListEl.innerHTML += `
+                <div class="check-item disabled" id="abs_wrapper_${index}">
+                    <input type="checkbox" id="abs_${index}" value="${member}" onchange="syncAttendance(${index}, 'abs')">
+                    <label for="abs_${index}">${member}</label>
+                </div>
+            `;
+        });
+    }
+
+    function syncAttendance(index, source) {
+        const attCheckbox = document.getElementById(`att_${index}`);
+        const absCheckbox = document.getElementById(`abs_${index}`);
+        
+        const attWrapper = document.getElementById(`att_wrapper_${index}`);
+        const absWrapper = document.getElementById(`abs_wrapper_${index}`);
+
+        if (source === 'att') {
+            if (attCheckbox.checked) {
+                absCheckbox.checked = false;
+                attWrapper.classList.remove('disabled');
+                absWrapper.classList.add('disabled');
+            } else {
+                absCheckbox.checked = true;
+                attWrapper.classList.add('disabled');
+                absWrapper.classList.remove('disabled');
+            }
+        } else if (source === 'abs') {
+            if (absCheckbox.checked) {
+                attCheckbox.checked = false;
+                absWrapper.classList.remove('disabled');
+                attWrapper.classList.add('disabled');
+            } else {
+                attCheckbox.checked = true;
+                absWrapper.classList.add('disabled');
+                attWrapper.classList.remove('disabled');
+            }
+        }
+    }
+
+    function renderUpdateInputs() {
+        const updatesListEl = document.getElementById('updatesList');
+        
+        updateMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            updatesListEl.innerHTML += `
+                <div class="member-update-card">
+                    <h4>${member}</h4>
+                    <textarea id="update_${memberId}" placeholder="Enter daily update for ${member}..."></textarea>
+                </div>
+            `;
+        });
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const reportDate = document.getElementById('reportDate').value;
+        const reportTime = document.getElementById('reportTime').value;
+
+        const attending = [];
+        const absent = [];
+
+        teamMembers.forEach((member, index) => {
+            if (document.getElementById(`att_${index}`).checked) {
+                attending.push(member);
+            } else {
+                absent.push(member);
+            }
+        });
+
+        let y = 20;
+
+        // Header Background Banner
+        doc.setFillColor(15, 23, 42); // Dark slate
+        doc.rect(0, 0, 210, 42, "F");
+
+        // Title
+        doc.setFontSize(20);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.text("CODING LEGENDS", 16, y);
+
+        // Subtitle
+        doc.setFontSize(11);
+        doc.setTextColor(148, 163, 184);
+        doc.setFont("helvetica", "normal");
+        doc.text("Daily Stand Up Report", 16, y + 7);
+
+        // Author metadata
+        doc.setFontSize(9);
+        doc.setTextColor(10, 132, 255);
+        doc.setFont("helvetica", "bold");
+        doc.text("Prepared by Sahansa (PM)", 140, y + 7);
+
+        y = 52;
+
+        // Meta Bar (Date & Time)
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(16, y, 178, 14, 2, 2, "F");
+
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        doc.setFont("helvetica", "bold");
+        doc.text("DATE:", 22, y + 9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(15, 23, 42);
+        doc.text(reportDate, 35, y + 9);
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(71, 85, 105);
+        doc.text("TIME:", 110, y + 9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(15, 23, 42);
+        doc.text(reportTime, 122, y + 9);
+
+        y += 24;
+
+        // Attendance Section Header
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(10, 132, 255);
+        doc.text("ATTENDANCE REGISTER", 16, y);
+
+        y += 6;
+
+        // Attendance Grid Cards
+        doc.setFillColor(241, 245, 249);
+        doc.roundedRect(16, y, 86, 28, 2, 2, "F");
+        doc.roundedRect(108, y, 86, 28, 2, 2, "F");
+
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(22, 101, 52); // Dark Green
+        doc.text("Attending (" + attending.length + ")", 20, y + 7);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(51, 65, 85);
+        const attendingText = attending.length > 0 ? attending.join(", ") : "None";
+        const splitAttending = doc.splitTextToSize(attendingText, 78);
+        doc.text(splitAttending, 20, y + 13);
+
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(153, 27, 27); // Dark Red
+        doc.text("Not Attending (" + absent.length + ")", 112, y + 7);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(51, 65, 85);
+        const absentText = absent.length > 0 ? absent.join(", ") : "None";
+        const splitAbsent = doc.splitTextToSize(absentText, 78);
+        doc.text(splitAbsent, 112, y + 13);
+
+        y += 36;
+
+        // Section Divider Line
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.line(16, y, 194, y);
+
+        y += 10;
+
+        // Updates Header
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(10, 132, 255);
+        doc.text("TEAM UPDATES", 16, y);
+
+        y += 8;
+
+        updateMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const updateText = document.getElementById(`update_${memberId}`).value.trim() || "No update submitted.";
+            
+            const splitText = doc.splitTextToSize(updateText, 168);
+            const cardHeight = 10 + (splitText.length * 4.5);
+
+            if (y + cardHeight > 275) {
+                doc.addPage();
+                y = 20;
+            }
+
+            // Member Card
+            doc.setFillColor(248, 250, 252);
+            doc.setDrawColor(226, 232, 240);
+            doc.roundedRect(16, y, 178, cardHeight, 2, 2, "FD");
+
+            // Blue Indicator Stripe
+            doc.setFillColor(10, 132, 255);
+            doc.rect(16, y, 2.5, cardHeight, "F");
+
+            // Member Name
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(15, 23, 42);
+            doc.text(member, 22, y + 6);
+
+            // Member Update Text
+            doc.setFontSize(8.5);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(51, 65, 85);
+            doc.text(splitText, 22, y + 12);
+
+            y += cardHeight + 6;
+        });
+
+        doc.save(`Coding_Legends_Standup_${reportDate}.pdf`);
+    }
+</script>
+
+</body>
+</html>
