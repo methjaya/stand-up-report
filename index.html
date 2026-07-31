@@ -8,17 +8,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --bg-dark: #000000;
-            --card-bg: rgba(28, 28, 30, 0.85);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --bg-dark: #0a0a0c;
+            --card-bg: rgba(24, 24, 28, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
             --apple-blue: #0a84ff;
             --apple-blue-hover: #409cff;
             --apple-red: #ff453a;
+            --apple-green: #30d158;
             --text-primary: #f2f2f7;
             --text-secondary: #8e8e93;
-            --input-bg: #2c2c2e;
-            --input-border: #3a3a3c;
-            --strike-color: #48484a;
+            --input-bg: #1c1c1e;
+            --input-border: #2c2c2e;
+            
+            /* Status Theme Colors */
+            --status-onsite: #30d158;
+            --status-online: #0a84ff;
+            --status-absent: #ff453a;
         }
 
         body {
@@ -34,13 +39,13 @@
 
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 820px;
             background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             padding: 36px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            border-radius: 24px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
             border: 1px solid var(--card-border);
         }
 
@@ -53,9 +58,9 @@
 
         h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.6px;
             color: var(--text-primary);
         }
 
@@ -102,7 +107,7 @@
             background-color: var(--input-bg);
             border: 1px solid var(--input-border);
             color: var(--text-primary);
-            border-radius: 10px;
+            border-radius: 12px;
             font-family: inherit;
             font-size: 15px;
             box-sizing: border-box;
@@ -128,10 +133,10 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            background: #1c1c1e;
+            background: rgba(18, 18, 20, 0.8);
             padding: 20px;
             border: 1px solid var(--card-border);
-            border-radius: 14px;
+            border-radius: 16px;
         }
 
         .attendance-row {
@@ -139,8 +144,8 @@
             align-items: center;
             justify-content: space-between;
             background: var(--input-bg);
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 8px 14px;
+            border-radius: 10px;
             border: 1px solid var(--input-border);
         }
 
@@ -152,8 +157,9 @@
 
         .attendance-row select {
             width: auto;
-            padding: 6px 10px;
+            padding: 6px 12px;
             font-size: 13px;
+            font-weight: 500;
         }
 
         .updates-container {
@@ -162,26 +168,94 @@
             margin-top: 24px;
         }
 
+        /* Modernized Dynamic Member Update Card */
         .member-update-card {
-            background: #1c1c1e;
+            position: relative;
+            background: rgba(28, 28, 32, 0.6);
             border: 1px solid var(--card-border);
-            padding: 16px;
-            margin-bottom: 14px;
-            border-radius: 12px;
+            padding: 16px 18px 16px 22px;
+            margin-bottom: 16px;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        .member-update-card:focus-within {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Color-coded accent stripe */
+        .member-update-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--status-onsite);
+            transition: background-color 0.3s ease;
+        }
+
+        /* Attendance Status Colors */
+        .member-update-card[data-status="On-site"]::before {
+            background-color: var(--status-onsite);
+        }
+        .member-update-card[data-status="Online"]::before {
+            background-color: var(--status-online);
+        }
+        .member-update-card[data-status="Absent"]::before {
+            background-color: var(--status-absent);
+        }
+
+        .card-header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
         }
 
         .member-update-card h4 {
-            margin: 0 0 10px 0;
+            margin: 0;
             font-size: 16px;
             font-weight: 600;
-            color: var(--apple-blue);
             letter-spacing: -0.2px;
+            color: var(--text-primary);
+        }
+
+        .status-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .member-update-card[data-status="On-site"] .status-pill {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--status-onsite);
+            border: 1px solid rgba(48, 209, 88, 0.3);
+        }
+
+        .member-update-card[data-status="Online"] .status-pill {
+            background: rgba(10, 132, 255, 0.15);
+            color: var(--status-online);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+        }
+
+        .member-update-card[data-status="Absent"] .status-pill {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--status-absent);
+            border: 1px solid rgba(255, 69, 58, 0.3);
         }
 
         .actions-group {
             display: flex;
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 24px;
         }
 
         button.btn-pdf {
@@ -391,11 +465,12 @@
         const grid = document.getElementById('attendanceGrid');
         grid.innerHTML = '';
 
-        teamMembers.forEach((member, index) => {
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
             grid.innerHTML += `
                 <div class="attendance-row">
-                    <label for="att_status_${index}">${member}</label>
-                    <select id="att_status_${index}" onchange="saveDraft()">
+                    <label for="att_status_${memberId}">${member}</label>
+                    <select id="att_status_${memberId}" onchange="updateMemberCardStatus('${member}'); saveDraft();">
                         <option value="On-site">On-Site</option>
                         <option value="Online">Joined Online</option>
                         <option value="Absent">Absent</option>
@@ -412,12 +487,30 @@
         updateMembers.forEach((member) => {
             const memberId = member.toLowerCase().replace(/\s+/g, '_');
             updatesListEl.innerHTML += `
-                <div class="member-update-card">
-                    <h4>${member}</h4>
+                <div class="member-update-card" id="card_${memberId}" data-status="On-site">
+                    <div class="card-header-flex">
+                        <h4>${member}</h4>
+                        <span class="status-pill" id="pill_${memberId}">On-site</span>
+                    </div>
                     <textarea id="update_${memberId}" placeholder="Enter daily update for ${member}..." oninput="saveDraft()"></textarea>
                 </div>
             `;
         });
+    }
+
+    function updateMemberCardStatus(member) {
+        if (member === "Sahansa") return; // Sahansa doesn't have an update card
+
+        const memberId = member.toLowerCase().replace(/\s+/g, '_');
+        const statusSelect = document.getElementById(`att_status_${memberId}`);
+        const card = document.getElementById(`card_${memberId}`);
+        const pill = document.getElementById(`pill_${memberId}`);
+
+        if (statusSelect && card && pill) {
+            const status = statusSelect.value;
+            card.setAttribute('data-status', status);
+            pill.innerText = status === 'Online' ? 'Joined Online' : status;
+        }
     }
 
     /* Local Storage Draft Handling */
@@ -429,8 +522,9 @@
             updates: {}
         };
 
-        teamMembers.forEach((member, index) => {
-            const statusEl = document.getElementById(`att_status_${index}`);
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const statusEl = document.getElementById(`att_status_${memberId}`);
             if (statusEl) {
                 draftData.attendance[member] = statusEl.value;
             }
@@ -461,10 +555,12 @@
             if (draftData.reportTime) document.getElementById('reportTime').value = draftData.reportTime;
 
             if (draftData.attendance) {
-                teamMembers.forEach((member, index) => {
-                    const statusEl = document.getElementById(`att_status_${index}`);
+                teamMembers.forEach((member) => {
+                    const memberId = member.toLowerCase().replace(/\s+/g, '_');
+                    const statusEl = document.getElementById(`att_status_${memberId}`);
                     if (statusEl && draftData.attendance[member]) {
                         statusEl.value = draftData.attendance[member];
+                        updateMemberCardStatus(member);
                     }
                 });
             }
@@ -494,6 +590,7 @@
             document.getElementById('reportDate').value = now.toISOString().split('T')[0];
             document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
             
+            teamMembers.forEach(member => updateMemberCardStatus(member));
             document.getElementById('draftStatus').innerText = "Draft cleared";
         }
     }
@@ -543,9 +640,13 @@
         const onsite = [];
         const online = [];
         const absent = [];
+        const memberStatuses = {};
 
-        teamMembers.forEach((member, index) => {
-            const status = document.getElementById(`att_status_${index}`).value;
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const status = document.getElementById(`att_status_${memberId}`).value;
+            memberStatuses[member] = status;
+
             if (status === 'On-site') onsite.push(member);
             else if (status === 'Online') online.push(member);
             else absent.push(member);
@@ -613,30 +714,30 @@
         doc.roundedRect(77, y, cardWidth, 28, 2, 2, "F");
         doc.roundedRect(138, y, cardWidth, 28, 2, 2, "F");
 
-        // On-Site
+        // On-Site (Green)
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(22, 101, 52);
+        doc.setTextColor(22, 163, 74); // #16a34a
         doc.text("On-Site (" + onsite.length + ")", 20, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(51, 65, 85);
         doc.text(doc.splitTextToSize(onsite.length > 0 ? onsite.join(", ") : "None", 48), 20, y + 13);
 
-        // Online
+        // Online (Blue)
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 64, 175);
+        doc.setTextColor(37, 99, 235); // #2563eb
         doc.text("Online (" + online.length + ")", 81, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(51, 65, 85);
         doc.text(doc.splitTextToSize(online.length > 0 ? online.join(", ") : "None", 48), 81, y + 13);
 
-        // Absent
+        // Absent (Red)
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(153, 27, 27);
+        doc.setTextColor(220, 38, 38); // #dc2626
         doc.text("Absent (" + absent.length + ")", 142, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
@@ -663,6 +764,7 @@
         updateMembers.forEach((member) => {
             const memberId = member.toLowerCase().replace(/\s+/g, '_');
             const updateText = document.getElementById(`update_${memberId}`).value.trim() || "No update submitted.";
+            const memberStatus = memberStatuses[member] || 'On-site';
             
             const splitText = doc.splitTextToSize(updateText, 168);
             const cardHeight = 10 + (splitText.length * 4.5);
@@ -672,20 +774,35 @@
                 y = 20;
             }
 
-            // Member Card
+            // Member Card Background & Border
             doc.setFillColor(248, 250, 252);
             doc.setDrawColor(226, 232, 240);
             doc.roundedRect(16, y, 178, cardHeight, 2, 2, "FD");
 
-            // Blue Indicator Stripe
-            doc.setFillColor(10, 132, 255);
-            doc.rect(16, y, 2.5, cardHeight, "F");
+            // Color-Coded Indicator Stripe (Matching Attendance Register colors)
+            if (memberStatus === 'On-site') {
+                doc.setFillColor(22, 163, 74); // Green
+            } else if (memberStatus === 'Online') {
+                doc.setFillColor(37, 99, 235); // Blue
+            } else {
+                doc.setFillColor(220, 38, 38); // Red
+            }
+            doc.rect(16, y, 3, cardHeight, "F");
 
             // Member Name
             doc.setFontSize(9);
             doc.setFont("helvetica", "bold");
             doc.setTextColor(15, 23, 42);
             doc.text(member, 22, y + 6);
+
+            // Attendance Status Badge Text on top right of card
+            doc.setFontSize(7.5);
+            if (memberStatus === 'On-site') doc.setTextColor(22, 163, 74);
+            else if (memberStatus === 'Online') doc.setTextColor(37, 99, 235);
+            else doc.setTextColor(220, 38, 38);
+            
+            const statusLabel = memberStatus === 'Online' ? 'JOINED ONLINE' : memberStatus.toUpperCase();
+            doc.text(statusLabel, 188 - doc.getTextWidth(statusLabel), y + 6);
 
             // Member Update Text
             doc.setFontSize(8.5);
