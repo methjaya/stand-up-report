@@ -7,51 +7,57 @@
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* Apple HIG Design Tokens */
+        /* Apple System Design Tokens */
         :root[data-theme="dark"] {
             --bg-base: #000000;
-            --bg-surface: rgba(28, 28, 30, 0.75);
-            --bg-card: rgba(44, 44, 46, 0.6);
-            --bg-input: #1c1c1e;
-            --bg-hover: rgba(255, 255, 255, 0.08);
-            --border-subtle: rgba(255, 255, 255, 0.12);
-            --border-active: #0a84ff;
-            --text-main: #f2f2f7;
-            --text-sub: #8e8e93;
-            --text-muted: #636366;
-            --accent-blue: #0a84ff;
-            --accent-blue-hover: #409cff;
-            --accent-green: #30d158;
-            --accent-orange: #ff9f0a;
-            --accent-red: #ff453a;
-            --accent-indigo: #5e5ce6;
-            --shadow-apple: 0 20px 40px rgba(0, 0, 0, 0.6);
+            --bg-elevated: #1c1c1e;
+            --bg-elevated-2: #2c2c2e;
+            --bg-elevated-3: #3a3a3c;
+            --sidebar-bg: rgba(22, 22, 24, 0.8);
+            --separator: rgba(255, 255, 255, 0.09);
+            --separator-strong: rgba(255, 255, 255, 0.14);
+            --label-primary: #f5f5f7;
+            --label-secondary: rgba(235, 235, 245, 0.6);
+            --label-tertiary: rgba(235, 235, 245, 0.35);
+            --accent: #0a84ff;
+            --accent-hover: #3396ff;
+            --accent-soft: rgba(10, 132, 255, 0.14);
+            --green: #30d158;
+            --green-soft: rgba(48, 209, 88, 0.14);
+            --orange: #ff9f0a;
+            --orange-soft: rgba(255, 159, 10, 0.14);
+            --red: #ff453a;
+            --red-soft: rgba(255, 69, 58, 0.14);
             --status-onsite: #30d158;
             --status-online: #0a84ff;
             --status-absent: #ff453a;
+            --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.4);
         }
 
         :root[data-theme="light"] {
             --bg-base: #f2f2f7;
-            --bg-surface: rgba(255, 255, 255, 0.85);
-            --bg-card: #ffffff;
-            --bg-input: #e5e5ea;
-            --bg-hover: rgba(0, 0, 0, 0.04);
-            --border-subtle: rgba(0, 0, 0, 0.1);
-            --border-active: #0071e3;
-            --text-main: #1c1c1e;
-            --text-sub: #6c6c70;
-            --text-muted: #aeaeb2;
-            --accent-blue: #0071e3;
-            --accent-blue-hover: #0077ed;
-            --accent-green: #34c759;
-            --accent-orange: #ff9500;
-            --accent-red: #ff3b30;
-            --accent-indigo: #5856d6;
-            --shadow-apple: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --bg-elevated: #ffffff;
+            --bg-elevated-2: #f2f2f7;
+            --bg-elevated-3: #e5e5ea;
+            --sidebar-bg: rgba(248, 248, 250, 0.85);
+            --separator: rgba(0, 0, 0, 0.08);
+            --separator-strong: rgba(0, 0, 0, 0.12);
+            --label-primary: #1d1d1f;
+            --label-secondary: rgba(60, 60, 67, 0.6);
+            --label-tertiary: rgba(60, 60, 67, 0.32);
+            --accent: #007aff;
+            --accent-hover: #0068d9;
+            --accent-soft: rgba(0, 122, 255, 0.1);
+            --green: #34c759;
+            --green-soft: rgba(52, 199, 89, 0.1);
+            --orange: #ff9500;
+            --orange-soft: rgba(255, 149, 0, 0.1);
+            --red: #ff3b30;
+            --red-soft: rgba(255, 59, 48, 0.1);
             --status-onsite: #34c759;
-            --status-online: #0071e3;
+            --status-online: #007aff;
             --status-absent: #ff3b30;
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
         * {
@@ -60,24 +66,25 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: var(--bg-base);
-            color: var(--text-main);
+            color: var(--label-primary);
             margin: 0;
             padding: 0;
             display: flex;
             min-height: 100vh;
             transition: background-color 0.25s ease, color 0.25s ease;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Sidebar Navigation */
+        /* Sidebar Nav */
         .sidebar {
-            width: 280px;
-            background: var(--bg-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border-subtle);
-            padding: 32px 20px;
+            width: 260px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid var(--separator);
+            padding: 28px 16px;
             display: flex;
             flex-direction: column;
             position: fixed;
@@ -88,27 +95,24 @@
         }
 
         .brand {
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border-subtle);
-            margin-bottom: 24px;
+            padding: 0 8px 20px 8px;
+            margin-bottom: 12px;
         }
 
         .brand h2 {
             margin: 0;
-            font-size: 17px;
-            font-weight: 700;
-            letter-spacing: -0.4px;
-            color: var(--text-main);
-            line-height: 1.35;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            color: var(--label-primary);
+            line-height: 1.3;
         }
 
         .brand p {
             margin: 4px 0 0 0;
-            font-size: 11px;
-            color: var(--accent-blue);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+            font-size: 12px;
+            color: var(--label-secondary);
+            font-weight: 400;
         }
 
         .nav-menu {
@@ -117,93 +121,94 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 2px;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 10px;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
-            color: var(--text-sub);
+            color: var(--label-secondary);
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
 
         .nav-item svg {
-            width: 18px;
-            height: 18px;
-            stroke: var(--text-sub);
+            width: 17px;
+            height: 17px;
+            stroke: var(--label-secondary);
             fill: none;
-            stroke-width: 2;
+            stroke-width: 1.8;
             stroke-linecap: round;
             stroke-linejoin: round;
+            flex-shrink: 0;
+            transition: stroke 0.15s ease;
         }
 
         .nav-item:hover {
-            background: var(--bg-hover);
-            color: var(--text-main);
+            background: var(--bg-elevated-2);
+            color: var(--label-primary);
         }
 
         .nav-item:hover svg {
-            stroke: var(--text-main);
+            stroke: var(--label-primary);
         }
 
         .nav-item.active {
-            background: var(--accent-blue);
-            color: #ffffff;
+            background: var(--accent-soft);
+            color: var(--accent);
             font-weight: 600;
         }
 
         .nav-item.active svg {
-            stroke: #ffffff;
+            stroke: var(--accent);
         }
 
         .theme-toggle-btn {
             margin-top: auto;
-            margin-bottom: 14px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-main);
-            padding: 10px 14px;
-            border-radius: 10px;
+            margin-bottom: 10px;
+            background: transparent;
+            border: none;
+            color: var(--label-secondary);
+            padding: 8px 10px;
+            border-radius: 8px;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.2s ease;
+            transition: background-color 0.15s ease;
         }
 
         .theme-toggle-btn:hover {
-            background: var(--bg-hover);
+            background: var(--bg-elevated-2);
+            color: var(--label-primary);
         }
 
         .pm-badge {
-            padding: 14px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
+            padding: 10px;
             font-size: 12px;
-            color: var(--text-sub);
+            color: var(--label-secondary);
         }
 
         .pm-badge strong {
             display: block;
-            color: var(--text-main);
+            color: var(--label-primary);
             font-size: 13px;
+            font-weight: 600;
         }
 
-        /* Workspace Layout */
+        /* Workspace Content */
         .main-content {
-            margin-left: 280px;
+            margin-left: 260px;
             flex: 1;
-            padding: 40px;
-            max-width: 920px;
+            padding: 48px 56px;
+            max-width: 880px;
         }
 
         .tab-content {
@@ -212,45 +217,47 @@
 
         .tab-content.active {
             display: block;
-            animation: appleFadeIn 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+            animation: appleFadeIn 0.2s ease;
         }
 
         @keyframes appleFadeIn {
-            from { opacity: 0; transform: scale(0.995) translateY(4px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from { opacity: 0; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .page-header {
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
         .page-header h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 700;
-            letter-spacing: -0.6px;
+            letter-spacing: -0.5px;
         }
 
         .page-header p {
-            margin: 4px 0 0 0;
+            margin: 6px 0 0 0;
             font-size: 14px;
-            color: var(--text-sub);
+            color: var(--label-secondary);
         }
 
-        /* Glass Cards */
+        /* Cards */
         .card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 18px;
-            padding: 28px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-apple);
+            background: var(--bg-elevated);
+            border: 1px solid var(--separator);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-card);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
         }
 
         .grid-2 {
@@ -263,10 +270,10 @@
             display: block;
             font-size: 12px;
             font-weight: 600;
-            color: var(--text-sub);
+            color: var(--label-secondary);
             margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
 
         input[type="text"],
@@ -276,183 +283,274 @@
         select,
         textarea {
             width: 100%;
-            padding: 12px 14px;
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-main);
-            border-radius: 10px;
+            padding: 10px 12px;
+            background-color: var(--bg-elevated-2);
+            border: 1px solid var(--separator);
+            color: var(--label-primary);
+            border-radius: 9px;
             font-family: inherit;
             font-size: 14px;
             box-sizing: border-box;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--border-active);
-            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: var(--label-tertiary);
         }
 
         textarea {
             resize: vertical;
-            min-height: 80px;
-        }
-
-        /* Grammar Tool Toolbar */
-        .grammar-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-bottom: none;
-            padding: 8px 12px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
-
-        .grammar-toolbar span {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--accent-indigo);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-grammar {
-            background: var(--accent-indigo);
-            color: #ffffff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-grammar:hover {
-            opacity: 0.88;
-        }
-
-        .grammar-textarea {
-            border-top-left-radius: 0 !important;
-            border-top-right-radius: 0 !important;
+            min-height: 76px;
+            line-height: 1.5;
         }
 
         /* Attendance List */
         .attendance-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            background: var(--bg-card);
-            padding: 18px;
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
+            gap: 8px;
         }
 
         .attendance-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--bg-input);
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-subtle);
+            background: var(--bg-elevated-2);
+            padding: 10px 12px;
+            border-radius: 9px;
+            border: 1px solid var(--separator);
         }
 
-        .attendance-row label { margin-bottom: 0; color: var(--text-main); font-size: 14px; text-transform: none; letter-spacing: normal; }
-        .attendance-row select { width: auto; padding: 6px 10px; font-size: 13px; }
+        .attendance-row label {
+            margin-bottom: 0;
+            color: var(--label-primary);
+            font-size: 14px;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .attendance-row select {
+            width: auto;
+            padding: 5px 8px;
+            font-size: 13px;
+            background: var(--bg-elevated-3);
+        }
 
         /* Member Card */
         .member-update-card {
             position: relative;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            padding: 16px 18px 16px 20px;
-            margin-bottom: 16px;
+            background: var(--bg-elevated-2);
+            border: 1px solid var(--separator);
+            padding: 16px 18px;
+            margin-bottom: 12px;
             border-radius: 12px;
-            overflow: hidden;
         }
 
-        .member-update-card::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-            background-color: var(--status-onsite); transition: background-color 0.3s ease;
-        }
-
-        .member-update-card[data-status="On-site"]::before { background-color: var(--status-onsite); }
-        .member-update-card[data-status="Online"]::before { background-color: var(--status-online); }
-        .member-update-card[data-status="Absent"]::before { background-color: var(--status-absent); }
-
-        .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .member-update-card h4 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-main); }
-
-        .status-pill {
-            font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-
-        .member-update-card[data-status="On-site"] .status-pill { background: rgba(48, 209, 88, 0.15); color: var(--status-onsite); }
-        .member-update-card[data-status="Online"] .status-pill { background: rgba(10, 132, 255, 0.15); color: var(--status-online); }
-        .member-update-card[data-status="Absent"] .status-pill { background: rgba(255, 69, 58, 0.15); color: var(--status-absent); }
-
-        /* Actions */
-        .actions-group { display: flex; gap: 12px; margin-top: 24px; }
-
-        button.btn-primary {
-            flex: 2; background-color: var(--accent-blue); color: #ffffff; border: none;
-            padding: 14px 20px; font-family: inherit; font-size: 15px; font-weight: 600;
-            border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        button.btn-primary:hover { background-color: var(--accent-blue-hover); }
-
-        button.btn-secondary {
-            flex: 1; background-color: var(--bg-input); color: var(--accent-red);
-            border: 1px solid var(--border-subtle); padding: 14px 20px; font-family: inherit;
-            font-size: 14px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
-        }
-
-        button.btn-secondary:hover { background-color: rgba(255, 69, 58, 0.1); }
-
-        .draft-status { font-size: 12px; color: var(--text-muted); text-align: right; margin-bottom: 12px; font-style: italic; }
-
-        /* Modal Component */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            z-index: 1000; justify-content: center; align-items: center;
-        }
-
-        .modal-card {
-            width: 90%; max-width: 360px; background: var(--bg-surface);
-            border: 1px solid var(--border-subtle); border-radius: 18px; padding: 24px; text-align: center;
-            box-shadow: var(--shadow-apple);
-        }
-
-        .modal-card h3 { margin: 0 0 6px 0; font-size: 17px; font-weight: 600; }
-        .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-        .btn-modal { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .btn-modal-cancel { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-subtle); }
-        .btn-modal-submit { background-color: var(--accent-blue); color: white; }
-        .error-msg { color: var(--accent-red); font-size: 12px; margin-top: 8px; display: none; }
-
-        /* History Item Cards */
-        .log-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 16px;
+        .card-header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 12px;
         }
 
-        .log-item h5 { margin: 0 0 6px 0; font-size: 15px; font-weight: 600; color: var(--accent-blue); }
-        .log-item p { margin: 0; font-size: 13px; color: var(--text-sub); line-height: 1.5; }
-        .meta-tag { display: inline-block; font-size: 11px; background: var(--bg-input); border: 1px solid var(--border-subtle); padding: 3px 8px; border-radius: 6px; margin-top: 8px; color: var(--text-muted); }
-        .badge-priority { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
-        .p-high { background: rgba(255, 69, 58, 0.15); color: var(--accent-red); }
-        .p-medium { background: rgba(255, 159, 10, 0.15); color: var(--accent-orange); }
-        .p-low { background: rgba(48, 209, 88, 0.15); color: var(--accent-green); }
+        .card-header-flex h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--label-primary);
+        }
+
+        .card-header-flex h4::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--status-onsite);
+            flex-shrink: 0;
+        }
+
+        .member-update-card[data-status="On-site"] h4::before { background-color: var(--status-onsite); }
+        .member-update-card[data-status="Online"] h4::before { background-color: var(--status-online); }
+        .member-update-card[data-status="Absent"] h4::before { background-color: var(--status-absent); }
+
+        .status-pill {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--label-tertiary);
+        }
+
+        /* Buttons */
+        .actions-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        button.btn-primary {
+            flex: 2;
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 12px 18px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.btn-secondary {
+            flex: 1;
+            background-color: var(--bg-elevated-2);
+            color: var(--red);
+            border: 1px solid var(--separator);
+            padding: 12px 18px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        button.btn-secondary:hover {
+            background-color: var(--red-soft);
+        }
+
+        .draft-status {
+            font-size: 12px;
+            color: var(--label-tertiary);
+            text-align: right;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-card {
+            width: 90%;
+            max-width: 340px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--separator);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+        }
+
+        .modal-card h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-card p {
+            margin: 0 0 16px 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 10px;
+            border-radius: 9px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .btn-modal-cancel {
+            background-color: var(--bg-elevated-2);
+            color: var(--label-primary);
+            border: 1px solid var(--separator);
+        }
+
+        .btn-modal-submit {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .error-msg {
+            color: var(--red);
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* Log Items */
+        .log-item {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-item h5 {
+            margin: 0 0 6px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--label-primary);
+        }
+
+        .log-item p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--label-secondary);
+            line-height: 1.5;
+        }
+
+        .meta-tag {
+            display: inline-block;
+            font-size: 11px;
+            color: var(--label-tertiary);
+            margin-top: 8px;
+        }
+
+        .badge-priority {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 5px;
+            margin-left: 8px;
+        }
+
+        .p-high { background: var(--red-soft); color: var(--red); }
+        .p-medium { background: var(--orange-soft); color: var(--orange); }
+        .p-low { background: var(--green-soft); color: var(--green); }
     </style>
 </head>
 <body>
@@ -565,20 +663,12 @@
 
             <div class="form-group">
                 <label>Key Discussions & Decisions</label>
-                <div class="grammar-toolbar">
-                    <span>Grammar Helper</span>
-                    <button type="button" class="btn-grammar" id="btn_momDiscussions" onclick="correctGrammarField('momDiscussions')">Correct Grammar</button>
-                </div>
-                <textarea id="momDiscussions" class="grammar-textarea" placeholder="Enter key meeting discussions..."></textarea>
+                <textarea id="momDiscussions" placeholder="Enter key meeting discussions..."></textarea>
             </div>
 
             <div class="form-group">
                 <label>Action Items & Responsibilities</label>
-                <div class="grammar-toolbar">
-                    <span>Grammar Helper</span>
-                    <button type="button" class="btn-grammar" id="btn_momActions" onclick="correctGrammarField('momActions')">Correct Grammar</button>
-                </div>
-                <textarea id="momActions" class="grammar-textarea" placeholder="Enter action items and assigned members..."></textarea>
+                <textarea id="momActions" placeholder="Enter action items and assigned members..."></textarea>
             </div>
 
             <div class="actions-group">
@@ -618,11 +708,7 @@
 
             <div class="form-group">
                 <label>Note Description / Details</label>
-                <div class="grammar-toolbar">
-                    <span>Grammar Helper</span>
-                    <button type="button" class="btn-grammar" id="btn_noteContent" onclick="correctGrammarField('noteContent')">Correct Grammar</button>
-                </div>
-                <textarea id="noteContent" class="grammar-textarea" placeholder="Enter note details..."></textarea>
+                <textarea id="noteContent" placeholder="Enter note details..."></textarea>
             </div>
 
             <button type="button" class="btn-primary" onclick="saveNote()">Add Reminder Note</button>
@@ -640,7 +726,7 @@
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-card">
         <h3>Security Verification</h3>
-        <p style="font-size: 13px; color: var(--text-sub);">Enter password to export PDF document.</p>
+        <p style="font-size: 13px; color: var(--label-secondary);">Enter password to export PDF document.</p>
         <input type="password" id="pdfPassword" placeholder="Enter Password" onkeyup="checkEnterKey(event)">
         <div class="error-msg" id="passwordError">Incorrect password. Please try again.</div>
         <div class="modal-actions">
@@ -675,91 +761,6 @@
         loadDraft();
         loadLogs();
     });
-
-    /* Automated Grammar Corrector Engine */
-    function correctGrammar(inputText) {
-        if (!inputText || !inputText.trim()) return "";
-
-        let text = inputText;
-
-        // Common contractions and typo corrections
-        const grammarFixes = [
-            { r: /\bi\b/g, t: "I" },
-            { r: /\bi'm\b/gi, t: "I'm" },
-            { r: /\bi've\b/gi, t: "I've" },
-            { r: /\bi'll\b/gi, t: "I'll" },
-            { r: /\bi'd\b/gi, t: "I'd" },
-            { r: /\bdont\b/gi, t: "don't" },
-            { r: /\bcant\b/gi, t: "can't" },
-            { r: /\bwont\b/gi, t: "won't" },
-            { r: /\bdidnt\b/gi, t: "didn't" },
-            { r: /\bisnt\b/gi, t: "isn't" },
-            { r: /\barent\b/gi, t: "aren't" },
-            { r: /\bhasnt\b/gi, t: "hasn't" },
-            { r: /\bhavent\b/gi, t: "haven't" },
-            { r: /\bcouldnt\b/gi, t: "couldn't" },
-            { r: /\bshouldnt\b/gi, t: "shouldn't" },
-            { r: /\bwouldnt\b/gi, t: "wouldn't" },
-            { r: /\bteh\b/gi, t: "the" },
-            { r: /\brecieved\b/gi, t: "received" },
-            { r: /\bseperate\b/gi, t: "separate" }
-        ];
-
-        grammarFixes.forEach(item => {
-            text = text.replace(item.r, item.t);
-        });
-
-        // Clean extra spacing
-        text = text.replace(/\s+/g, ' ').trim();
-
-        // Capitalize start of sentences
-        text = text.replace(/(^\s*|[.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
-
-        // Capitalize standalone 'i'
-        text = text.replace(/\b([i])\b/g, 'I');
-
-        // Capitalize registered team member names
-        teamMembers.forEach(member => {
-            const regex = new RegExp(`\\b${member}\\b`, 'gi');
-            text = text.replace(regex, member);
-        });
-
-        // Ensure trailing period
-        if (text.length > 0 && !/[.!?]$/.test(text)) {
-            text += '.';
-        }
-
-        return text;
-    }
-
-    function correctGrammarField(fieldId) {
-        const field = document.getElementById(fieldId);
-        const button = document.getElementById(`btn_${fieldId}`);
-
-        if (!field) return;
-
-        const originalText = field.value;
-        if (!originalText || !originalText.trim()) {
-            alert("Please enter text first.");
-            return;
-        }
-
-        const corrected = correctGrammar(originalText);
-        field.value = corrected;
-
-        // Visual confirmation feedback
-        if (button) {
-            const originalLabel = button.innerText;
-            button.innerText = "Corrected!";
-            button.style.backgroundColor = "var(--accent-green)";
-            setTimeout(() => {
-                button.innerText = originalLabel;
-                button.style.backgroundColor = "";
-            }, 1200);
-        }
-
-        saveDraft();
-    }
 
     /* Theme Switcher */
     function toggleTheme() {
@@ -811,11 +812,7 @@
                         <h4>${member}</h4>
                         <span class="status-pill" id="pill_${memberId}">On-site</span>
                     </div>
-                    <div class="grammar-toolbar">
-                        <span>Grammar Helper</span>
-                        <button type="button" class="btn-grammar" id="btn_update_${memberId}" onclick="correctGrammarField('update_${memberId}')">Correct Grammar</button>
-                    </div>
-                    <textarea id="update_${memberId}" class="grammar-textarea" placeholder="Enter daily update for ${member}..." oninput="saveDraft()"></textarea>
+                    <textarea id="update_${memberId}" placeholder="Enter daily update for ${member}..." oninput="saveDraft()"></textarea>
                 </div>
             `;
         });
@@ -954,7 +951,7 @@
                 <p style="margin-top:4px;"><strong>Action Items:</strong> ${m.actions || 'None'}</p>
                 <span class="meta-tag">Date: ${m.date} at ${m.time}</span>
             </div>
-        `).join('') : '<p style="color: var(--text-muted); font-size: 13px;">No meeting minutes saved yet.</p>';
+        `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No meeting minutes saved yet.</p>';
 
         // Notes Logs
         const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
@@ -964,7 +961,7 @@
                 <p>${n.content}</p>
                 <span class="meta-tag">Added on ${n.date}</span>
             </div>
-        `).join('') : '<p style="color: var(--text-muted); font-size: 13px;">No active reminders created.</p>';
+        `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No active reminders created.</p>';
     }
 
     /* Password Modal */
