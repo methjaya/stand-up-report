@@ -1,80 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coding Legends - Stand-Up Report Generator</title>
+    <title>Sahansa The PM's Management Suite</title>
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root {
-            --bg-dark: #000000;
-            --card-bg: rgba(28, 28, 30, 0.85);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --apple-blue: #0a84ff;
-            --apple-blue-hover: #409cff;
-            --apple-red: #ff453a;
-            --text-primary: #f2f2f7;
-            --text-secondary: #8e8e93;
-            --input-bg: #2c2c2e;
-            --input-border: #3a3a3c;
-            --strike-color: #48484a;
+        /* Apple HIG Design Tokens */
+        :root[data-theme="dark"] {
+            --bg-base: #000000;
+            --bg-surface: rgba(28, 28, 30, 0.75);
+            --bg-card: rgba(44, 44, 46, 0.6);
+            --bg-input: #1c1c1e;
+            --bg-hover: rgba(255, 255, 255, 0.08);
+            --border-subtle: rgba(255, 255, 255, 0.12);
+            --border-active: #0a84ff;
+            --text-main: #f2f2f7;
+            --text-sub: #8e8e93;
+            --text-muted: #636366;
+            --accent-blue: #0a84ff;
+            --accent-blue-hover: #409cff;
+            --accent-green: #30d158;
+            --accent-orange: #ff9f0a;
+            --accent-red: #ff453a;
+            --accent-indigo: #5e5ce6;
+            --shadow-apple: 0 20px 40px rgba(0, 0, 0, 0.6);
+            --status-onsite: #30d158;
+            --status-online: #0a84ff;
+            --status-absent: #ff453a;
+        }
+
+        :root[data-theme="light"] {
+            --bg-base: #f2f2f7;
+            --bg-surface: rgba(255, 255, 255, 0.85);
+            --bg-card: #ffffff;
+            --bg-input: #e5e5ea;
+            --bg-hover: rgba(0, 0, 0, 0.04);
+            --border-subtle: rgba(0, 0, 0, 0.1);
+            --border-active: #0071e3;
+            --text-main: #1c1c1e;
+            --text-sub: #6c6c70;
+            --text-muted: #aeaeb2;
+            --accent-blue: #0071e3;
+            --accent-blue-hover: #0077ed;
+            --accent-green: #34c759;
+            --accent-orange: #ff9500;
+            --accent-red: #ff3b30;
+            --accent-indigo: #5856d6;
+            --shadow-apple: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --status-onsite: #34c759;
+            --status-online: #0071e3;
+            --status-absent: #ff3b30;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
+            background-color: var(--bg-base);
+            color: var(--text-main);
             margin: 0;
-            padding: 40px 16px;
+            padding: 0;
             display: flex;
-            justify-content: center;
-            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            transition: background-color 0.25s ease, color 0.25s ease;
         }
 
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background: var(--card-bg);
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-surface);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 36px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--card-border);
+            border-right: 1px solid var(--border-subtle);
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
         }
 
-        header {
-            text-align: center;
+        .brand {
             padding-bottom: 24px;
-            margin-bottom: 28px;
-            border-bottom: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 24px;
         }
 
-        h1 {
+        .brand h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            color: var(--text-main);
+            line-height: 1.35;
+        }
+
+        .brand p {
+            margin: 4px 0 0 0;
+            font-size: 11px;
+            color: var(--accent-blue);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-sub);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        .nav-item:hover svg {
+            stroke: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: var(--accent-blue);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .nav-item.active svg {
+            stroke: #ffffff;
+        }
+
+        .theme-toggle-btn {
+            margin-top: auto;
+            margin-bottom: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .pm-badge {
+            padding: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .pm-badge strong {
+            display: block;
+            color: var(--text-main);
+            font-size: 13px;
+        }
+
+        /* Workspace Layout */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px;
+            max-width: 920px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: appleFadeIn 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        @keyframes appleFadeIn {
+            from { opacity: 0; transform: scale(0.995) translateY(4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
             margin: 0;
             font-size: 28px;
             font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--text-primary);
+            letter-spacing: -0.6px;
         }
 
-        p.subtitle {
-            margin-top: 6px;
-            color: var(--apple-blue);
-            font-size: 15px;
-            font-weight: 500;
+        .page-header p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: var(--text-sub);
         }
 
-        p.author {
-            margin-top: 4px;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 400;
+        /* Glass Cards */
+        .card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-apple);
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .grid-2 {
@@ -85,13 +261,15 @@
 
         label {
             display: block;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-sub);
             margin-bottom: 8px;
-            letter-spacing: -0.1px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
+        input[type="text"],
         input[type="date"],
         input[type="time"],
         input[type="password"],
@@ -99,38 +277,77 @@
         textarea {
             width: 100%;
             padding: 12px 14px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--text-primary);
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
             border-radius: 10px;
             font-family: inherit;
-            font-size: 15px;
+            font-size: 14px;
             box-sizing: border-box;
             transition: all 0.2s ease;
         }
 
-        input[type="date"]:focus,
-        input[type="time"]:focus,
-        input[type="password"]:focus,
-        select:focus,
-        textarea:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--apple-blue);
-            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+            border-color: var(--border-active);
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
         }
 
         textarea {
             resize: vertical;
-            min-height: 70px;
+            min-height: 80px;
         }
 
+        /* Grammar Tool Toolbar */
+        .grammar-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-bottom: none;
+            padding: 8px 12px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .grammar-toolbar span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-indigo);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-grammar {
+            background: var(--accent-indigo);
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-grammar:hover {
+            opacity: 0.88;
+        }
+
+        .grammar-textarea {
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+
+        /* Attendance List */
         .attendance-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            background: #1c1c1e;
-            padding: 20px;
-            border: 1px solid var(--card-border);
+            background: var(--bg-card);
+            padding: 18px;
+            border: 1px solid var(--border-subtle);
             border-radius: 14px;
         }
 
@@ -138,236 +355,305 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--input-bg);
+            background: var(--bg-input);
             padding: 8px 12px;
             border-radius: 8px;
-            border: 1px solid var(--input-border);
+            border: 1px solid var(--border-subtle);
         }
 
-        .attendance-row label {
-            margin-bottom: 0;
-            color: var(--text-primary);
-            font-size: 14px;
-        }
+        .attendance-row label { margin-bottom: 0; color: var(--text-main); font-size: 14px; text-transform: none; letter-spacing: normal; }
+        .attendance-row select { width: auto; padding: 6px 10px; font-size: 13px; }
 
-        .attendance-row select {
-            width: auto;
-            padding: 6px 10px;
-            font-size: 13px;
-        }
-
-        .updates-container {
-            border-top: 1px solid var(--card-border);
-            padding-top: 24px;
-            margin-top: 24px;
-        }
-
+        /* Member Card */
         .member-update-card {
-            background: #1c1c1e;
-            border: 1px solid var(--card-border);
-            padding: 16px;
-            margin-bottom: 14px;
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            padding: 16px 18px 16px 20px;
+            margin-bottom: 16px;
             border-radius: 12px;
+            overflow: hidden;
         }
 
-        .member-update-card h4 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--apple-blue);
-            letter-spacing: -0.2px;
+        .member-update-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+            background-color: var(--status-onsite); transition: background-color 0.3s ease;
         }
 
-        .actions-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
+        .member-update-card[data-status="On-site"]::before { background-color: var(--status-onsite); }
+        .member-update-card[data-status="Online"]::before { background-color: var(--status-online); }
+        .member-update-card[data-status="Absent"]::before { background-color: var(--status-absent); }
+
+        .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .member-update-card h4 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-main); }
+
+        .status-pill {
+            font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
 
-        button.btn-pdf {
-            flex: 2;
-            background-color: var(--apple-blue);
-            color: #ffffff;
-            border: none;
-            padding: 14px 20px;
-            font-family: inherit;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        .member-update-card[data-status="On-site"] .status-pill { background: rgba(48, 209, 88, 0.15); color: var(--status-onsite); }
+        .member-update-card[data-status="Online"] .status-pill { background: rgba(10, 132, 255, 0.15); color: var(--status-online); }
+        .member-update-card[data-status="Absent"] .status-pill { background: rgba(255, 69, 58, 0.15); color: var(--status-absent); }
+
+        /* Actions */
+        .actions-group { display: flex; gap: 12px; margin-top: 24px; }
+
+        button.btn-primary {
+            flex: 2; background-color: var(--accent-blue); color: #ffffff; border: none;
+            padding: 14px 20px; font-family: inherit; font-size: 15px; font-weight: 600;
+            border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        button.btn-clear {
-            flex: 1;
-            background-color: var(--input-bg);
-            color: var(--apple-red);
-            border: 1px solid var(--input-border);
-            padding: 14px 20px;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        button.btn-primary:hover { background-color: var(--accent-blue-hover); }
+
+        button.btn-secondary {
+            flex: 1; background-color: var(--bg-input); color: var(--accent-red);
+            border: 1px solid var(--border-subtle); padding: 14px 20px; font-family: inherit;
+            font-size: 14px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
         }
 
-        button.btn-pdf:hover {
-            background-color: var(--apple-blue-hover);
-            transform: scale(1.01);
-            box-shadow: 0 6px 16px rgba(10, 132, 255, 0.4);
-        }
+        button.btn-secondary:hover { background-color: rgba(255, 69, 58, 0.1); }
 
-        button.btn-clear:hover {
-            background-color: rgba(255, 69, 58, 0.15);
-        }
+        .draft-status { font-size: 12px; color: var(--text-muted); text-align: right; margin-bottom: 12px; font-style: italic; }
 
-        .draft-status {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-align: right;
-            margin-top: -12px;
-            margin-bottom: 12px;
-            font-style: italic;
-        }
-
-        /* Apple Glassmorphism Modal Styles */
+        /* Modal Component */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 1000; justify-content: center; align-items: center;
         }
 
         .modal-card {
-            width: 90%;
-            max-width: 360px;
-            background: rgba(36, 36, 38, 0.95);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            width: 90%; max-width: 360px; background: var(--bg-surface);
+            border: 1px solid var(--border-subtle); border-radius: 18px; padding: 24px; text-align: center;
+            box-shadow: var(--shadow-apple);
         }
 
-        .modal-card h3 {
-            margin: 0 0 6px 0;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
+        .modal-card h3 { margin: 0 0 6px 0; font-size: 17px; font-weight: 600; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .btn-modal { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-modal-cancel { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-subtle); }
+        .btn-modal-submit { background-color: var(--accent-blue); color: white; }
+        .error-msg { color: var(--accent-red); font-size: 12px; margin-top: 8px; display: none; }
+
+        /* History Item Cards */
+        .log-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
         }
 
-        .modal-card p {
-            margin: 0 0 16px 0;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
-        .btn-modal {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-modal-cancel {
-            background-color: var(--input-bg);
-            color: var(--text-primary);
-        }
-
-        .btn-modal-submit {
-            background-color: var(--apple-blue);
-            color: white;
-        }
-
-        .btn-modal:hover {
-            opacity: 0.85;
-        }
-
-        .error-msg {
-            color: var(--apple-red);
-            font-size: 12px;
-            margin-top: 8px;
-            display: none;
-        }
+        .log-item h5 { margin: 0 0 6px 0; font-size: 15px; font-weight: 600; color: var(--accent-blue); }
+        .log-item p { margin: 0; font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+        .meta-tag { display: inline-block; font-size: 11px; background: var(--bg-input); border: 1px solid var(--border-subtle); padding: 3px 8px; border-radius: 6px; margin-top: 8px; color: var(--text-muted); }
+        .badge-priority { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+        .p-high { background: rgba(255, 69, 58, 0.15); color: var(--accent-red); }
+        .p-medium { background: rgba(255, 159, 10, 0.15); color: var(--accent-orange); }
+        .p-low { background: rgba(48, 209, 88, 0.15); color: var(--accent-green); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>Coding Legends</h1>
-        <p class="subtitle">Daily Stand Up Report</p>
-        <p class="author">Prepared by Sahansa (PM)</p>
-    </header>
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+    <div class="brand">
+        <h2>Sahansa The PM's Management Suite</h2>
+        <p>Project Workspace</p>
+    </div>
 
-    <div class="draft-status" id="draftStatus">Draft state: Unsaved</div>
+    <ul class="nav-menu">
+        <li class="nav-item active" onclick="switchTab('standup')">
+            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Stand-Up Report
+        </li>
+        <li class="nav-item" onclick="switchTab('mom')">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Meeting Minutes
+        </li>
+        <li class="nav-item" onclick="switchTab('notes')">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Notes & Reminders
+        </li>
+    </ul>
 
-    <form id="standupForm">
-        <div class="grid-2 form-group">
-            <div>
-                <label for="reportDate">Date</label>
-                <input type="date" id="reportDate" onchange="saveDraft()" required>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">
+        <span id="themeLabel">Dark Mode</span>
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+
+    <div class="pm-badge">
+        <strong>Sahansa</strong>
+        <span>Project Manager</span>
+    </div>
+</aside>
+
+<!-- Main Workspace -->
+<main class="main-content">
+
+    <!-- 1. STAND-UP REPORT TAB -->
+    <section id="tab-standup" class="tab-content active">
+        <div class="page-header">
+            <h1>Daily Stand-Up Report</h1>
+            <p>Track team attendance and member status.</p>
+        </div>
+
+        <div class="draft-status" id="draftStatus">Draft state: Unsaved</div>
+
+        <div class="card">
+            <form id="standupForm">
+                <div class="grid-2 form-group">
+                    <div>
+                        <label for="reportDate">Date</label>
+                        <input type="date" id="reportDate" onchange="saveDraft()" required>
+                    </div>
+                    <div>
+                        <label for="reportTime">Time</label>
+                        <input type="time" id="reportTime" onchange="saveDraft()" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Attendance Register</label>
+                    <div class="attendance-grid" id="attendanceGrid"></div>
+                </div>
+
+                <div class="form-group" style="margin-top: 24px;">
+                    <label>Member Updates</label>
+                    <div id="updatesList"></div>
+                </div>
+
+                <div class="actions-group">
+                    <button type="button" class="btn-secondary" onclick="clearDraft()">Reset Draft</button>
+                    <button type="button" class="btn-primary" onclick="openPasswordModal('standup')">Generate Standup PDF</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- 2. MEETING MINUTES (MOM) TAB -->
+    <section id="tab-mom" class="tab-content">
+        <div class="page-header">
+            <h1>Meeting Minutes (MOM)</h1>
+            <p>Log decisions, discussions, and action items with exportable PDF summaries.</p>
+        </div>
+
+        <div class="card">
+            <div class="form-group grid-2">
+                <div>
+                    <label>Meeting Title</label>
+                    <input type="text" id="momTitle" placeholder="e.g. Sprint Review / Architecture Discussion">
+                </div>
+                <div>
+                    <label>Attendees</label>
+                    <input type="text" id="momAttendees" placeholder="e.g. Sahansa, Rajitha, Vinul">
+                </div>
             </div>
-            <div>
-                <label for="reportTime">Time</label>
-                <input type="time" id="reportTime" onchange="saveDraft()" required>
+
+            <div class="form-group grid-2">
+                <div>
+                    <label>Date</label>
+                    <input type="date" id="momDate">
+                </div>
+                <div>
+                    <label>Time</label>
+                    <input type="time" id="momTime">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Key Discussions & Decisions</label>
+                <div class="grammar-toolbar">
+                    <span>Grammar Helper</span>
+                    <button type="button" class="btn-grammar" id="btn_momDiscussions" onclick="correctGrammarField('momDiscussions')">Correct Grammar</button>
+                </div>
+                <textarea id="momDiscussions" class="grammar-textarea" placeholder="Enter key meeting discussions..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Action Items & Responsibilities</label>
+                <div class="grammar-toolbar">
+                    <span>Grammar Helper</span>
+                    <button type="button" class="btn-grammar" id="btn_momActions" onclick="correctGrammarField('momActions')">Correct Grammar</button>
+                </div>
+                <textarea id="momActions" class="grammar-textarea" placeholder="Enter action items and assigned members..."></textarea>
+            </div>
+
+            <div class="actions-group">
+                <button type="button" class="btn-secondary" onclick="saveMOM()">Save Local Entry</button>
+                <button type="button" class="btn-primary" onclick="openPasswordModal('mom')">Generate MOM PDF</button>
             </div>
         </div>
 
-        <div class="form-group">
-            <label>Attendance Status</label>
-            <div class="attendance-grid" id="attendanceGrid"></div>
+        <div class="card">
+            <h3>Saved Minutes History</h3>
+            <div id="momLog"></div>
+        </div>
+    </section>
+
+    <!-- 3. SPECIAL NOTES & REMINDERS TAB -->
+    <section id="tab-notes" class="tab-content">
+        <div class="page-header">
+            <h1>Special Notes & Reminders</h1>
+            <p>Record critical notes, priorities, and PM milestones.</p>
         </div>
 
-        <div class="updates-container form-group">
-            <label>Member Updates</label>
-            <div id="updatesList"></div>
+        <div class="card">
+            <div class="form-group grid-2">
+                <div>
+                    <label>Title / Headline</label>
+                    <input type="text" id="noteTitle" placeholder="e.g. Client Release Deadline">
+                </div>
+                <div>
+                    <label>Priority Level</label>
+                    <select id="notePriority">
+                        <option value="High">High Priority</option>
+                        <option value="Medium" selected>Medium Priority</option>
+                        <option value="Low">Low Priority</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Note Description / Details</label>
+                <div class="grammar-toolbar">
+                    <span>Grammar Helper</span>
+                    <button type="button" class="btn-grammar" id="btn_noteContent" onclick="correctGrammarField('noteContent')">Correct Grammar</button>
+                </div>
+                <textarea id="noteContent" class="grammar-textarea" placeholder="Enter note details..."></textarea>
+            </div>
+
+            <button type="button" class="btn-primary" onclick="saveNote()">Add Reminder Note</button>
         </div>
 
-        <div class="actions-group">
-            <button type="button" class="btn-clear" onclick="clearDraft()">Reset Draft</button>
-            <button type="button" class="btn-pdf" onclick="openPasswordModal()">Generate PDF Report</button>
+        <div class="card">
+            <h3>Active Reminders & Notes</h3>
+            <div id="notesLog"></div>
         </div>
-    </form>
-</div>
+    </section>
 
-<!-- Password Prompt Modal -->
+</main>
+
+<!-- Security Password Modal -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-card">
         <h3>Security Verification</h3>
-        <p>Enter authorization password to download PDF report.</p>
+        <p style="font-size: 13px; color: var(--text-sub);">Enter password to export PDF document.</p>
         <input type="password" id="pdfPassword" placeholder="Enter Password" onkeyup="checkEnterKey(event)">
         <div class="error-msg" id="passwordError">Incorrect password. Please try again.</div>
         <div class="modal-actions">
             <button type="button" class="btn-modal btn-modal-cancel" onclick="closePasswordModal()">Cancel</button>
-            <button type="button" class="btn-modal btn-modal-submit" onclick="verifyAndDownload()">Download</button>
+            <button type="button" class="btn-modal btn-modal-submit" onclick="verifyAndDownload()">Download PDF</button>
         </div>
     </div>
 </div>
 
 <script>
     const DEFAULT_PASSWORD = "2522";
-    const DRAFT_KEY = "coding_legends_standup_draft";
+    const DRAFT_KEY = "sahansa_pm_standup_draft";
+    let activePdfType = "standup";
 
     const teamMembers = [
         "Rajitha", "Vinul", "Navodya", "Sahansa", 
@@ -381,21 +667,129 @@
         const now = new Date();
         document.getElementById('reportDate').value = now.toISOString().split('T')[0];
         document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
+        document.getElementById('momDate').value = now.toISOString().split('T')[0];
+        document.getElementById('momTime').value = now.toTimeString().slice(0, 5);
 
         renderAttendance();
         renderUpdateInputs();
         loadDraft();
+        loadLogs();
     });
+
+    /* Automated Grammar Corrector Engine */
+    function correctGrammar(inputText) {
+        if (!inputText || !inputText.trim()) return "";
+
+        let text = inputText;
+
+        // Common contractions and typo corrections
+        const grammarFixes = [
+            { r: /\bi\b/g, t: "I" },
+            { r: /\bi'm\b/gi, t: "I'm" },
+            { r: /\bi've\b/gi, t: "I've" },
+            { r: /\bi'll\b/gi, t: "I'll" },
+            { r: /\bi'd\b/gi, t: "I'd" },
+            { r: /\bdont\b/gi, t: "don't" },
+            { r: /\bcant\b/gi, t: "can't" },
+            { r: /\bwont\b/gi, t: "won't" },
+            { r: /\bdidnt\b/gi, t: "didn't" },
+            { r: /\bisnt\b/gi, t: "isn't" },
+            { r: /\barent\b/gi, t: "aren't" },
+            { r: /\bhasnt\b/gi, t: "hasn't" },
+            { r: /\bhavent\b/gi, t: "haven't" },
+            { r: /\bcouldnt\b/gi, t: "couldn't" },
+            { r: /\bshouldnt\b/gi, t: "shouldn't" },
+            { r: /\bwouldnt\b/gi, t: "wouldn't" },
+            { r: /\bteh\b/gi, t: "the" },
+            { r: /\brecieved\b/gi, t: "received" },
+            { r: /\bseperate\b/gi, t: "separate" }
+        ];
+
+        grammarFixes.forEach(item => {
+            text = text.replace(item.r, item.t);
+        });
+
+        // Clean extra spacing
+        text = text.replace(/\s+/g, ' ').trim();
+
+        // Capitalize start of sentences
+        text = text.replace(/(^\s*|[.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
+
+        // Capitalize standalone 'i'
+        text = text.replace(/\b([i])\b/g, 'I');
+
+        // Capitalize registered team member names
+        teamMembers.forEach(member => {
+            const regex = new RegExp(`\\b${member}\\b`, 'gi');
+            text = text.replace(regex, member);
+        });
+
+        // Ensure trailing period
+        if (text.length > 0 && !/[.!?]$/.test(text)) {
+            text += '.';
+        }
+
+        return text;
+    }
+
+    function correctGrammarField(fieldId) {
+        const field = document.getElementById(fieldId);
+        const button = document.getElementById(`btn_${fieldId}`);
+
+        if (!field) return;
+
+        const originalText = field.value;
+        if (!originalText || !originalText.trim()) {
+            alert("Please enter text first.");
+            return;
+        }
+
+        const corrected = correctGrammar(originalText);
+        field.value = corrected;
+
+        // Visual confirmation feedback
+        if (button) {
+            const originalLabel = button.innerText;
+            button.innerText = "Corrected!";
+            button.style.backgroundColor = "var(--accent-green)";
+            setTimeout(() => {
+                button.innerText = originalLabel;
+                button.style.backgroundColor = "";
+            }, 1200);
+        }
+
+        saveDraft();
+    }
+
+    /* Theme Switcher */
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        document.getElementById('themeLabel').innerText = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+    }
+
+    /* Tab Switcher */
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        
+        const tabMap = { 'standup': 0, 'mom': 1, 'notes': 2 };
+        document.querySelectorAll('.nav-item')[tabMap[tabId]].classList.add('active');
+    }
 
     function renderAttendance() {
         const grid = document.getElementById('attendanceGrid');
         grid.innerHTML = '';
 
-        teamMembers.forEach((member, index) => {
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
             grid.innerHTML += `
                 <div class="attendance-row">
-                    <label for="att_status_${index}">${member}</label>
-                    <select id="att_status_${index}" onchange="saveDraft()">
+                    <label for="att_status_${memberId}">${member}</label>
+                    <select id="att_status_${memberId}" onchange="updateMemberCardStatus('${member}'); saveDraft();">
                         <option value="On-site">On-Site</option>
                         <option value="Online">Joined Online</option>
                         <option value="Absent">Absent</option>
@@ -412,15 +806,37 @@
         updateMembers.forEach((member) => {
             const memberId = member.toLowerCase().replace(/\s+/g, '_');
             updatesListEl.innerHTML += `
-                <div class="member-update-card">
-                    <h4>${member}</h4>
-                    <textarea id="update_${memberId}" placeholder="Enter daily update for ${member}..." oninput="saveDraft()"></textarea>
+                <div class="member-update-card" id="card_${memberId}" data-status="On-site">
+                    <div class="card-header-flex">
+                        <h4>${member}</h4>
+                        <span class="status-pill" id="pill_${memberId}">On-site</span>
+                    </div>
+                    <div class="grammar-toolbar">
+                        <span>Grammar Helper</span>
+                        <button type="button" class="btn-grammar" id="btn_update_${memberId}" onclick="correctGrammarField('update_${memberId}')">Correct Grammar</button>
+                    </div>
+                    <textarea id="update_${memberId}" class="grammar-textarea" placeholder="Enter daily update for ${member}..." oninput="saveDraft()"></textarea>
                 </div>
             `;
         });
     }
 
-    /* Local Storage Draft Handling */
+    function updateMemberCardStatus(member) {
+        if (member === "Sahansa") return;
+
+        const memberId = member.toLowerCase().replace(/\s+/g, '_');
+        const statusSelect = document.getElementById(`att_status_${memberId}`);
+        const card = document.getElementById(`card_${memberId}`);
+        const pill = document.getElementById(`pill_${memberId}`);
+
+        if (statusSelect && card && pill) {
+            const status = statusSelect.value;
+            card.setAttribute('data-status', status);
+            pill.innerText = status === 'Online' ? 'Joined Online' : status;
+        }
+    }
+
+    /* Draft Local Storage */
     function saveDraft() {
         const draftData = {
             reportDate: document.getElementById('reportDate').value,
@@ -429,23 +845,19 @@
             updates: {}
         };
 
-        teamMembers.forEach((member, index) => {
-            const statusEl = document.getElementById(`att_status_${index}`);
-            if (statusEl) {
-                draftData.attendance[member] = statusEl.value;
-            }
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const statusEl = document.getElementById(`att_status_${memberId}`);
+            if (statusEl) draftData.attendance[member] = statusEl.value;
         });
 
         updateMembers.forEach((member) => {
             const memberId = member.toLowerCase().replace(/\s+/g, '_');
             const textarea = document.getElementById(`update_${memberId}`);
-            if (textarea) {
-                draftData.updates[memberId] = textarea.value;
-            }
+            if (textarea) draftData.updates[memberId] = textarea.value;
         });
 
         localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
-        
         const now = new Date();
         document.getElementById('draftStatus').innerText = `Auto-saved draft at ${now.toLocaleTimeString()}`;
     }
@@ -456,15 +868,16 @@
 
         try {
             const draftData = JSON.parse(savedData);
-
             if (draftData.reportDate) document.getElementById('reportDate').value = draftData.reportDate;
             if (draftData.reportTime) document.getElementById('reportTime').value = draftData.reportTime;
 
             if (draftData.attendance) {
-                teamMembers.forEach((member, index) => {
-                    const statusEl = document.getElementById(`att_status_${index}`);
+                teamMembers.forEach((member) => {
+                    const memberId = member.toLowerCase().replace(/\s+/g, '_');
+                    const statusEl = document.getElementById(`att_status_${memberId}`);
                     if (statusEl && draftData.attendance[member]) {
                         statusEl.value = draftData.attendance[member];
+                        updateMemberCardStatus(member);
                     }
                 });
             }
@@ -478,74 +891,124 @@
                     }
                 });
             }
-
             document.getElementById('draftStatus').innerText = "Loaded saved draft";
-        } catch (e) {
-            console.error("Failed to parse draft data", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function clearDraft() {
-        if (confirm("Are you sure you want to clear all form fields and reset the saved draft?")) {
+        if (confirm("Are you sure you want to clear all form fields?")) {
             localStorage.removeItem(DRAFT_KEY);
             document.getElementById('standupForm').reset();
-            
             const now = new Date();
             document.getElementById('reportDate').value = now.toISOString().split('T')[0];
             document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
-            
+            teamMembers.forEach(member => updateMemberCardStatus(member));
             document.getElementById('draftStatus').innerText = "Draft cleared";
         }
     }
 
-    /* Modal & Authentication Functions */
-    function openPasswordModal() {
-        const modal = document.getElementById('passwordModal');
-        const pwdInput = document.getElementById('pdfPassword');
-        const errorMsg = document.getElementById('passwordError');
+    /* MOM Storage */
+    function saveMOM() {
+        const title = document.getElementById('momTitle').value || "Meeting Minutes";
+        const attendees = document.getElementById('momAttendees').value || "All Members";
+        const date = document.getElementById('momDate').value || new Date().toISOString().split('T')[0];
+        const time = document.getElementById('momTime').value || "10:00 AM";
+        const discussions = document.getElementById('momDiscussions').value;
+        const actions = document.getElementById('momActions').value;
 
-        pwdInput.value = '';
-        errorMsg.style.display = 'none';
-        modal.style.display = 'flex';
-        pwdInput.focus();
+        if (!discussions) return alert("Please enter key discussions.");
+
+        const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
+        logs.unshift({ title, attendees, date, time, discussions, actions });
+        localStorage.setItem('mom_logs', JSON.stringify(logs));
+
+        alert("Meeting Minutes saved successfully!");
+        loadLogs();
+    }
+
+    /* Notes Storage */
+    function saveNote() {
+        const title = document.getElementById('noteTitle').value || "Untitled Note";
+        const priority = document.getElementById('notePriority').value;
+        const content = document.getElementById('noteContent').value;
+
+        if (!content) return alert("Please enter note description.");
+
+        const logs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
+        logs.unshift({ title, priority, content, date: new Date().toLocaleDateString() });
+        localStorage.setItem('notes_logs', JSON.stringify(logs));
+
+        document.getElementById('noteTitle').value = '';
+        document.getElementById('noteContent').value = '';
+        loadLogs();
+    }
+
+    function loadLogs() {
+        // MOM Logs
+        const momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
+        document.getElementById('momLog').innerHTML = momLogs.length ? momLogs.map(m => `
+            <div class="log-item">
+                <h5>${m.title}</h5>
+                <p><strong>Attendees:</strong> ${m.attendees}</p>
+                <p style="margin-top:6px;"><strong>Key Decisions:</strong> ${m.discussions}</p>
+                <p style="margin-top:4px;"><strong>Action Items:</strong> ${m.actions || 'None'}</p>
+                <span class="meta-tag">Date: ${m.date} at ${m.time}</span>
+            </div>
+        `).join('') : '<p style="color: var(--text-muted); font-size: 13px;">No meeting minutes saved yet.</p>';
+
+        // Notes Logs
+        const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
+        document.getElementById('notesLog').innerHTML = notesLogs.length ? notesLogs.map(n => `
+            <div class="log-item">
+                <h5>${n.title} <span class="badge-priority p-${n.priority.toLowerCase()}">${n.priority}</span></h5>
+                <p>${n.content}</p>
+                <span class="meta-tag">Added on ${n.date}</span>
+            </div>
+        `).join('') : '<p style="color: var(--text-muted); font-size: 13px;">No active reminders created.</p>';
+    }
+
+    /* Password Modal */
+    function openPasswordModal(type) {
+        activePdfType = type;
+        document.getElementById('pdfPassword').value = '';
+        document.getElementById('passwordError').style.display = 'none';
+        document.getElementById('passwordModal').style.display = 'flex';
+        document.getElementById('pdfPassword').focus();
     }
 
     function closePasswordModal() {
         document.getElementById('passwordModal').style.display = 'none';
     }
 
-    function checkEnterKey(event) {
-        if (event.key === 'Enter') {
-            verifyAndDownload();
-        }
+    function checkEnterKey(e) {
+        if (e.key === 'Enter') verifyAndDownload();
     }
 
     function verifyAndDownload() {
-        const enteredPassword = document.getElementById('pdfPassword').value;
-        const errorMsg = document.getElementById('passwordError');
-
-        if (enteredPassword === DEFAULT_PASSWORD) {
+        if (document.getElementById('pdfPassword').value === DEFAULT_PASSWORD) {
             closePasswordModal();
-            generatePDF();
+            if (activePdfType === 'standup') generateStandupPDF();
+            else if (activePdfType === 'mom') generateMOMPDF();
         } else {
-            errorMsg.style.display = 'block';
+            document.getElementById('passwordError').style.display = 'block';
         }
     }
 
-    /* PDF Generation */
-    function generatePDF() {
+    /* Stand-Up PDF Generator */
+    function generateStandupPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
         const reportDate = document.getElementById('reportDate').value;
         const reportTime = document.getElementById('reportTime').value;
 
-        const onsite = [];
-        const online = [];
-        const absent = [];
+        const onsite = [], online = [], absent = [], memberStatuses = {};
 
-        teamMembers.forEach((member, index) => {
-            const status = document.getElementById(`att_status_${index}`).value;
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const status = document.getElementById(`att_status_${memberId}`).value;
+            memberStatuses[member] = status;
+
             if (status === 'On-site') onsite.push(member);
             else if (status === 'Online') online.push(member);
             else absent.push(member);
@@ -553,23 +1016,19 @@
 
         let y = 20;
 
-        // Header Background Banner
-        doc.setFillColor(15, 23, 42);
+        doc.setFillColor(28, 28, 30);
         doc.rect(0, 0, 210, 42, "F");
 
-        // Title
-        doc.setFontSize(20);
+        doc.setFontSize(16);
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.text("CODING LEGENDS", 16, y);
+        doc.text("SAHANSA THE PM'S MANAGEMENT SUITE", 16, y);
 
-        // Subtitle
         doc.setFontSize(11);
-        doc.setTextColor(148, 163, 184);
+        doc.setTextColor(142, 142, 147);
         doc.setFont("helvetica", "normal");
         doc.text("Daily Stand Up Report", 16, y + 7);
 
-        // Author metadata
         doc.setFontSize(9);
         doc.setTextColor(10, 132, 255);
         doc.setFont("helvetica", "bold");
@@ -577,92 +1036,82 @@
 
         y = 52;
 
-        // Meta Bar (Date & Time)
-        doc.setFillColor(248, 250, 252);
+        doc.setFillColor(242, 242, 247);
         doc.roundedRect(16, y, 178, 14, 2, 2, "F");
 
         doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105);
+        doc.setTextColor(108, 108, 112);
         doc.setFont("helvetica", "bold");
         doc.text("DATE:", 22, y + 9);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(15, 23, 42);
+        doc.setTextColor(28, 28, 30);
         doc.text(reportDate, 35, y + 9);
 
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(71, 85, 105);
+        doc.setTextColor(108, 108, 112);
         doc.text("TIME:", 110, y + 9);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(15, 23, 42);
+        doc.setTextColor(28, 28, 30);
         doc.text(reportTime, 122, y + 9);
 
         y += 24;
 
-        // Attendance Section Header
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(10, 132, 255);
+        doc.setTextColor(0, 113, 227);
         doc.text("ATTENDANCE REGISTER", 16, y);
 
         y += 6;
 
-        // Attendance 3-Column Cards
         const cardWidth = 56;
-        doc.setFillColor(241, 245, 249);
+        doc.setFillColor(242, 242, 247);
         doc.roundedRect(16, y, cardWidth, 28, 2, 2, "F");
         doc.roundedRect(77, y, cardWidth, 28, 2, 2, "F");
         doc.roundedRect(138, y, cardWidth, 28, 2, 2, "F");
 
-        // On-Site
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(22, 101, 52);
+        doc.setTextColor(52, 199, 89);
         doc.text("On-Site (" + onsite.length + ")", 20, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.setTextColor(51, 65, 85);
+        doc.setTextColor(28, 28, 30);
         doc.text(doc.splitTextToSize(onsite.length > 0 ? onsite.join(", ") : "None", 48), 20, y + 13);
 
-        // Online
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 64, 175);
+        doc.setTextColor(0, 113, 227);
         doc.text("Online (" + online.length + ")", 81, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.setTextColor(51, 65, 85);
+        doc.setTextColor(28, 28, 30);
         doc.text(doc.splitTextToSize(online.length > 0 ? online.join(", ") : "None", 48), 81, y + 13);
 
-        // Absent
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(153, 27, 27);
+        doc.setTextColor(255, 59, 48);
         doc.text("Absent (" + absent.length + ")", 142, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.setTextColor(51, 65, 85);
+        doc.setTextColor(28, 28, 30);
         doc.text(doc.splitTextToSize(absent.length > 0 ? absent.join(", ") : "None", 48), 142, y + 13);
 
         y += 36;
-
-        // Section Divider Line
-        doc.setDrawColor(226, 232, 240);
+        doc.setDrawColor(229, 229, 234);
         doc.setLineWidth(0.5);
         doc.line(16, y, 194, y);
-
         y += 10;
 
-        // Updates Header
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(10, 132, 255);
+        doc.setTextColor(0, 113, 227);
         doc.text("TEAM UPDATES", 16, y);
-
         y += 8;
 
         updateMembers.forEach((member) => {
             const memberId = member.toLowerCase().replace(/\s+/g, '_');
             const updateText = document.getElementById(`update_${memberId}`).value.trim() || "No update submitted.";
+            const memberStatus = memberStatuses[member] || 'On-site';
             
             const splitText = doc.splitTextToSize(updateText, 168);
             const cardHeight = 10 + (splitText.length * 4.5);
@@ -672,31 +1121,139 @@
                 y = 20;
             }
 
-            // Member Card
-            doc.setFillColor(248, 250, 252);
-            doc.setDrawColor(226, 232, 240);
+            doc.setFillColor(242, 242, 247);
+            doc.setDrawColor(229, 229, 234);
             doc.roundedRect(16, y, 178, cardHeight, 2, 2, "FD");
 
-            // Blue Indicator Stripe
-            doc.setFillColor(10, 132, 255);
-            doc.rect(16, y, 2.5, cardHeight, "F");
+            if (memberStatus === 'On-site') doc.setFillColor(52, 199, 89);
+            else if (memberStatus === 'Online') doc.setFillColor(0, 113, 227);
+            else doc.setFillColor(255, 59, 48);
+            doc.rect(16, y, 3, cardHeight, "F");
 
-            // Member Name
             doc.setFontSize(9);
             doc.setFont("helvetica", "bold");
-            doc.setTextColor(15, 23, 42);
+            doc.setTextColor(28, 28, 30);
             doc.text(member, 22, y + 6);
 
-            // Member Update Text
+            doc.setFontSize(7.5);
+            if (memberStatus === 'On-site') doc.setTextColor(52, 199, 89);
+            else if (memberStatus === 'Online') doc.setTextColor(0, 113, 227);
+            else doc.setTextColor(255, 59, 48);
+            
+            const statusLabel = memberStatus === 'Online' ? 'JOINED ONLINE' : memberStatus.toUpperCase();
+            doc.text(statusLabel, 188 - doc.getTextWidth(statusLabel), y + 6);
+
             doc.setFontSize(8.5);
             doc.setFont("helvetica", "normal");
-            doc.setTextColor(51, 65, 85);
+            doc.setTextColor(108, 108, 112);
             doc.text(splitText, 22, y + 12);
 
             y += cardHeight + 6;
         });
 
-        doc.save(`Coding_Legends_Standup_${reportDate}.pdf`);
+        doc.save(`Standup_Report_${reportDate}.pdf`);
+    }
+
+    /* Meeting Minutes PDF Generator */
+    function generateMOMPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const title = document.getElementById('momTitle').value || "Meeting Minutes";
+        const attendees = document.getElementById('momAttendees').value || "All Members";
+        const date = document.getElementById('momDate').value || new Date().toISOString().split('T')[0];
+        const time = document.getElementById('momTime').value || "N/A";
+        const discussions = document.getElementById('momDiscussions').value || "None recorded.";
+        const actions = document.getElementById('momActions').value || "None recorded.";
+
+        let y = 20;
+
+        doc.setFillColor(28, 28, 30);
+        doc.rect(0, 0, 210, 42, "F");
+
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.text("SAHANSA THE PM'S MANAGEMENT SUITE", 16, y);
+
+        doc.setFontSize(11);
+        doc.setTextColor(142, 142, 147);
+        doc.setFont("helvetica", "normal");
+        doc.text("Official Meeting Minutes (MOM)", 16, y + 7);
+
+        doc.setFontSize(9);
+        doc.setTextColor(10, 132, 255);
+        doc.setFont("helvetica", "bold");
+        doc.text("Recorded by Sahansa (PM)", 140, y + 7);
+
+        y = 52;
+
+        doc.setFillColor(242, 242, 247);
+        doc.roundedRect(16, y, 178, 22, 2, 2, "F");
+
+        doc.setFontSize(9);
+        doc.setTextColor(108, 108, 112);
+        doc.setFont("helvetica", "bold");
+        doc.text("TITLE:", 22, y + 8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(28, 28, 30);
+        doc.text(title, 36, y + 8);
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(108, 108, 112);
+        doc.text("ATTENDEES:", 22, y + 16);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(28, 28, 30);
+        doc.text(attendees, 45, y + 16);
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(108, 108, 112);
+        doc.text("DATE & TIME:", 120, y + 8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(28, 28, 30);
+        doc.text(`${date} @ ${time}`, 145, y + 8);
+
+        y += 32;
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 113, 227);
+        doc.text("KEY DISCUSSIONS & DECISIONS", 16, y);
+
+        y += 6;
+        const splitDisc = doc.splitTextToSize(discussions, 170);
+        const discHeight = 12 + (splitDisc.length * 4.5);
+
+        doc.setFillColor(242, 242, 247);
+        doc.setDrawColor(229, 229, 234);
+        doc.roundedRect(16, y, 178, discHeight, 2, 2, "FD");
+
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(108, 108, 112);
+        doc.text(splitDisc, 20, y + 8);
+
+        y += discHeight + 14;
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 113, 227);
+        doc.text("ACTION ITEMS & RESPONSIBILITIES", 16, y);
+
+        y += 6;
+        const splitAct = doc.splitTextToSize(actions, 170);
+        const actHeight = 12 + (splitAct.length * 4.5);
+
+        doc.setFillColor(242, 242, 247);
+        doc.setDrawColor(229, 229, 234);
+        doc.roundedRect(16, y, 178, actHeight, 2, 2, "FD");
+
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(108, 108, 112);
+        doc.text(splitAct, 20, y + 8);
+
+        doc.save(`Meeting_Minutes_${date}.pdf`);
     }
 </script>
 
