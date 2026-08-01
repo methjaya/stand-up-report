@@ -121,7 +121,7 @@
             100% { transform: rotateY(20deg) rotateX(-10deg) translateY(4px); }
         }
 
-        /* Auth Screen */
+        /* Cleaned Auth Screen Overlay */
         .auth-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--bg-base); display: flex; align-items: center;
@@ -129,12 +129,12 @@
             overflow-y: auto;
         }
         .auth-card {
-            width: 100%; max-width: 400px; background: var(--bg-surface);
-            border: 1px solid var(--separator); border-radius: 20px; padding: 28px 24px;
+            width: 100%; max-width: 380px; background: var(--bg-surface);
+            border: 1px solid var(--separator); border-radius: 20px; padding: 32px 28px;
             box-shadow: var(--shadow-card);
         }
-        .auth-header { text-align: center; margin-bottom: 24px; }
-        .auth-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+        .auth-header { text-align: center; margin-bottom: 28px; }
+        .auth-header h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
         .auth-header p { margin: 6px 0 0 0; font-size: 13px; color: var(--label-secondary); }
 
         /* Mobile Header */
@@ -417,12 +417,7 @@
     <div class="auth-card">
         <div class="auth-header">
             <h2>Sahansa Suite</h2>
-            <p id="authSubtitle">Sign in to access your workspace</p>
-        </div>
-
-        <div class="auth-tabs">
-            <button class="auth-tab-btn active" id="tabBtnLogin" onclick="setAuthTab('login')">Login</button>
-            <button class="auth-tab-btn" id="tabBtnForgot" onclick="setAuthTab('forgot')">Forgot Pswd</button>
+            <p id="authSubtitle">Sign in to access your main workspace</p>
         </div>
 
         <!-- Login Form -->
@@ -436,31 +431,7 @@
                 <input type="password" id="loginPassword" placeholder="Enter your password" required>
             </div>
             <div class="error-msg" id="loginError">Invalid credentials or account pending approval.</div>
-            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Sign In</button>
-        </form>
-
-        <!-- Forgot Password Form -->
-        <form id="forgotForm" style="display: none;" onsubmit="handleForgotRequest(event)">
-            <div class="form-group">
-                <label>Account Email</label>
-                <input type="email" id="forgotEmail" placeholder="Enter your email" required>
-            </div>
-            <div class="error-msg" id="forgotError"></div>
-            <button type="submit" class="btn-primary" id="btnSendResetCode" style="width: 100%; margin-top: 10px;">Send Reset Code</button>
-        </form>
-
-        <!-- Reset Password Step -->
-        <form id="resetPassForm" style="display: none;" onsubmit="handleResetPassword(event)">
-            <div class="form-group">
-                <label>Verification Code</label>
-                <input type="text" id="resetCode" placeholder="Enter verification code" required>
-            </div>
-            <div class="form-group">
-                <label>New Password</label>
-                <input type="password" id="newPassword" placeholder="Enter new password" required>
-            </div>
-            <div class="error-msg" id="resetError">Invalid code.</div>
-            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Update Password</button>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 14px;">Sign In</button>
         </form>
     </div>
 </div>
@@ -868,14 +839,13 @@
         id: 1,
         name: "Sahansa (PM)",
         email: "methjaya252@gmail.com",
-        password: "", // User must create a password upon setup
+        password: "2522", // Default Master password
         role: "superadmin",
         status: "approved",
         modules: ['standup', 'mom', 'notes', 'history']
     };
 
     let currentUser = null;
-    let pendingResetEmail = null;
 
     const teamMembers = [
         "Rajitha", "Vinul", "Navodya", "Sahansa", 
@@ -1019,23 +989,6 @@
         }
     }
 
-    function setAuthTab(tab) {
-        document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('forgotForm').style.display = 'none';
-        document.getElementById('resetPassForm').style.display = 'none';
-
-        if (tab === 'login') {
-            document.getElementById('tabBtnLogin').classList.add('active');
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('authSubtitle').innerText = "Sign in to access your workspace";
-        } else if (tab === 'forgot') {
-            document.getElementById('tabBtnForgot').classList.add('active');
-            document.getElementById('forgotForm').style.display = 'block';
-            document.getElementById('authSubtitle').innerText = "Reset your account password";
-        }
-    }
-
     async function handleLogin(e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value.trim().toLowerCase();
@@ -1126,60 +1079,6 @@
         } finally {
             btn.innerText = "Create & Send Email OTP";
             btn.disabled = false;
-        }
-    }
-
-    async function handleForgotRequest(e) {
-        e.preventDefault();
-        const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
-        await initUsers();
-        const users = JSON.parse(localStorage.getItem('app_users') || '[]');
-
-        if (users.some(u => u.email === email)) {
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            pendingResetEmail = { email, code };
-
-            const btn = document.getElementById('btnSendResetCode');
-            btn.innerText = "Sending Code...";
-            btn.disabled = true;
-
-            try {
-                await sendEmailCode(email, code);
-                document.getElementById('forgotForm').style.display = 'none';
-                document.getElementById('resetPassForm').style.display = 'block';
-            } catch (err) { alert("Failed to send reset email."); }
-            finally {
-                btn.innerText = "Send Reset Code";
-                btn.disabled = false;
-            }
-        } else {
-            document.getElementById('forgotError').innerText = "Email not registered.";
-            document.getElementById('forgotError').style.display = 'block';
-        }
-    }
-
-    async function handleResetPassword(e) {
-        e.preventDefault();
-        const code = document.getElementById('resetCode').value.trim();
-        const newPass = document.getElementById('newPassword').value;
-
-        if (pendingResetEmail && code === pendingResetEmail.code) {
-            const users = JSON.parse(localStorage.getItem('app_users') || '[]');
-            const user = users.find(u => u.email === pendingResetEmail.email);
-            if (user) {
-                user.password = newPass;
-                delete user.otpSetup;
-                localStorage.setItem('app_users', JSON.stringify(users));
-
-                if (supabaseClient) {
-                    try { await supabaseClient.from('app_users').update({ password: newPass }).eq('email', user.email); } catch (e){}
-                }
-
-                alert("Password updated successfully! Please log in.");
-                setAuthTab('login');
-            }
-        } else {
-            document.getElementById('resetError').style.display = 'block';
         }
     }
 
