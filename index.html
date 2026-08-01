@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sahansa The PM's Management Suite</title>
-    <!-- Shiny Thunderbolt Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='shinyFav' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230a84ff'/><stop offset='50%25' stop-color='%2330d158'/><stop offset='100%25' stop-color='%23ffd60a'/></linearGradient></defs><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z' fill='url(%23shinyFav)'/></svg>">
+    <!-- Glossy Blue Thunderbolt Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='glossyBlue' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2382cfff'/><stop offset='45%25' stop-color='%230a84ff'/><stop offset='100%25' stop-color='%230040b3'/></linearGradient></defs><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z' fill='url(%23glossyBlue)'/></svg>">
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Supabase JS Client Library -->
@@ -439,25 +439,10 @@
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password (OTP setup if first login)">
+                <input type="password" id="loginPassword" placeholder="Enter password (2522 default)">
             </div>
             <div class="error-msg" id="loginError">Invalid credentials or account pending approval.</div>
             <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Sign In</button>
-        </form>
-
-        <!-- Master Account First-Time Setup Step -->
-        <form id="masterOtpForm" style="display: none;" onsubmit="handleMasterOtpSubmit(event)">
-            <div class="form-group">
-                <label>Enter Master Setup OTP Code</label>
-                <div class="field-hint">A 6-digit OTP was sent to methjaya252@gmail.com</div>
-                <input type="text" id="masterOtpCode" placeholder="Enter 6-digit OTP code" required>
-            </div>
-            <div class="form-group">
-                <label>Set Master Account Password</label>
-                <input type="password" id="masterNewPassword" placeholder="Create master password" required>
-            </div>
-            <div class="error-msg" id="masterOtpError">Incorrect OTP code.</div>
-            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Verify & Set Master Password</button>
         </form>
 
         <!-- Forgot Password Form -->
@@ -889,7 +874,7 @@
         id: 1,
         name: "Sahansa (PM)",
         email: "methjaya252@gmail.com",
-        password: "", // First-time setup via OTP
+        password: "2522",
         role: "superadmin",
         status: "approved",
         modules: ['standup', 'mom', 'notes', 'history']
@@ -897,7 +882,6 @@
 
     let currentUser = null;
     let pendingResetEmail = null;
-    let pendingMasterSetupCode = null;
 
     const teamMembers = [
         "Rajitha", "Vinul", "Navodya", "Sahansa", 
@@ -981,7 +965,10 @@
     function checkLoginState() {
         const session = JSON.parse(localStorage.getItem('current_user') || 'null');
         if (session) {
-            currentUser = session;
+            const users = JSON.parse(localStorage.getItem('app_users') || '[]');
+            const fresh = users.find(u => u.email === session.email);
+            currentUser = fresh || session;
+            localStorage.setItem('current_user', JSON.stringify(currentUser));
             document.getElementById('authOverlay').style.display = 'none';
             updateUserUI();
         } else {
@@ -1043,7 +1030,6 @@
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('forgotForm').style.display = 'none';
         document.getElementById('resetPassForm').style.display = 'none';
-        document.getElementById('masterOtpForm').style.display = 'none';
 
         if (tab === 'login') {
             document.getElementById('tabBtnLogin').classList.add('active');
@@ -1066,21 +1052,6 @@
         const user = users.find(u => u.email === email);
 
         if (user) {
-            // Master Account or User First-Time OTP Setup
-            if ((user.email === defaultSuperadmin.email && (!user.password || user.password === "")) || (user.otpSetup && user.otpSetup === password)) {
-                if (user.email === defaultSuperadmin.email && (!user.password || user.password === "")) {
-                    const code = Math.floor(100000 + Math.random() * 900000).toString();
-                    pendingMasterSetupCode = code;
-                    alert("First time setup for Master Account detected. Sending OTP code to methjaya252@gmail.com...");
-                    await sendEmailCode(user.email, code);
-
-                    document.getElementById('loginForm').style.display = 'none';
-                    document.getElementById('masterOtpForm').style.display = 'block';
-                    document.getElementById('authSubtitle').innerText = "Set Master Superadmin Password";
-                    return;
-                }
-            }
-
             if (user.password !== password && user.otpSetup !== password) {
                 document.getElementById('loginError').innerText = "Invalid credentials or password.";
                 document.getElementById('loginError').style.display = 'block';
@@ -1100,34 +1071,6 @@
         } else {
             document.getElementById('loginError').innerText = "Invalid email or password.";
             document.getElementById('loginError').style.display = 'block';
-        }
-    }
-
-    async function handleMasterOtpSubmit(e) {
-        e.preventDefault();
-        const code = document.getElementById('masterOtpCode').value.trim();
-        const newPass = document.getElementById('masterNewPassword').value;
-
-        if (pendingMasterSetupCode && code === pendingMasterSetupCode) {
-            const users = JSON.parse(localStorage.getItem('app_users') || '[]');
-            const master = users.find(u => u.email === defaultSuperadmin.email);
-            if (master) {
-                master.password = newPass;
-                master.status = 'approved';
-                localStorage.setItem('app_users', JSON.stringify(users));
-
-                if (supabaseClient) {
-                    try { await supabaseClient.from('app_users').update({ password: newPass, status: 'approved' }).eq('email', master.email); } catch (e){}
-                }
-
-                currentUser = master;
-                localStorage.setItem('current_user', JSON.stringify(currentUser));
-                document.getElementById('authOverlay').style.display = 'none';
-                updateUserUI();
-                alert("Master Superadmin password set successfully!");
-            }
-        } else {
-            document.getElementById('masterOtpError').style.display = 'block';
         }
     }
 
