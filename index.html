@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sahansa The PM's Management Suite</title>
+    <!-- Thunderbolt Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230a84ff'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Supabase JS Client Library -->
@@ -219,7 +221,7 @@
 
         /* Workspace Content Layout */
         .main-content {
-            margin-left: 260px; flex: 1; padding: 48px 56px; max-width: 880px; width: 100%; min-width: 0;
+            margin-left: 260px; flex: 1; padding: 48px 56px; max-width: 1000px; width: 100%; min-width: 0;
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: appleFadeIn 0.2s ease; }
@@ -355,18 +357,23 @@
         .p-medium { background: var(--orange-soft); color: var(--orange); }
         .p-low { background: var(--green-soft); color: var(--green); }
 
-        /* Responsive Table Container & Cell Formatting Fixes */
+        /* High-Contrast Expanded Table Styling */
         .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .user-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; min-width: 680px; }
-        .user-table th, .user-table td { padding: 12px 10px; border-bottom: 1px solid var(--separator); text-align: left; vertical-align: middle; }
-        .user-table th { color: var(--label-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px; white-space: nowrap; }
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; min-width: 820px; }
+        .user-table th, .user-table td { padding: 14px 12px; border-bottom: 1px solid var(--separator); text-align: left; vertical-align: middle; }
+        .user-table th { color: var(--label-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px; white-space: nowrap; letter-spacing: 0.5px; }
         
-        .user-table td.col-name { font-weight: 600; white-space: nowrap; }
-        .user-table td.col-email { word-break: break-all; max-width: 180px; }
-        .user-table td.col-actions { white-space: nowrap; }
+        .user-table td.col-name { font-weight: 600; color: var(--label-primary); white-space: nowrap; min-width: 140px; }
+        .user-table td.col-email { color: var(--label-primary); word-break: break-all; min-width: 220px; font-size: 13px; }
+        .user-table td.col-role { min-width: 130px; }
+        .user-table td.col-role select { min-height: 38px; color: var(--label-primary); font-weight: 600; }
+        .user-table td.col-modules { min-width: 200px; }
+        .user-table td.col-status { white-space: nowrap; min-width: 100px; }
+        .user-table td.col-actions { white-space: nowrap; min-width: 160px; }
 
-        .module-checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
-        .module-checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--label-primary); cursor: pointer; white-space: nowrap; }
+        .module-checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+        .module-checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--label-primary); cursor: pointer; white-space: nowrap; font-weight: 500; }
+        .module-checkbox-item input { width: 16px; height: 16px; min-height: auto; cursor: pointer; accent-color: var(--accent); }
 
         /* Mobile Rules */
         @media screen and (max-width: 768px) {
@@ -933,6 +940,22 @@
         loadLogs();
     });
 
+    // Cross-tab real-time sync for user permissions and logins
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'app_users' || event.key === 'current_user') {
+            const session = JSON.parse(localStorage.getItem('current_user') || 'null');
+            if (session) {
+                const users = JSON.parse(localStorage.getItem('app_users') || '[]');
+                const fresh = users.find(u => u.email === session.email);
+                if (fresh) {
+                    currentUser = fresh;
+                    localStorage.setItem('current_user', JSON.stringify(currentUser));
+                    updateUserUI();
+                }
+            }
+        }
+    });
+
     /* --- Auth & User Systems --- */
     async function initUsers() {
         let users = JSON.parse(localStorage.getItem('app_users') || '[]');
@@ -990,12 +1013,28 @@
         document.getElementById('profRole').innerText = currentUser.role;
         document.getElementById('profStatus').innerText = currentUser.status;
 
-        // Module Permissions Nav Visibility
-        const userMods = isSuperadmin ? ['standup', 'mom', 'notes', 'history'] : (currentUser.modules || ['standup', 'mom', 'notes', 'history']);
-        document.getElementById('nav_standup').style.display = userMods.includes('standup') ? 'flex' : 'none';
-        document.getElementById('nav_mom').style.display = userMods.includes('mom') ? 'flex' : 'none';
-        document.getElementById('nav_notes').style.display = userMods.includes('notes') ? 'flex' : 'none';
-        document.getElementById('nav_history').style.display = userMods.includes('history') ? 'flex' : 'none';
+        // Strict Nav Visibility Based on Permitted Modules
+        const userMods = isSuperadmin ? ['standup', 'mom', 'notes', 'history'] : (currentUser.modules || []);
+        
+        ['standup', 'mom', 'notes', 'history'].forEach(mod => {
+            const navEl = document.getElementById(`nav_${mod}`);
+            const tabEl = document.getElementById(`tab-${mod}`);
+            
+            if (userMods.includes(mod)) {
+                if (navEl) navEl.style.display = 'flex';
+            } else {
+                if (navEl) {
+                    navEl.style.display = 'none';
+                    navEl.classList.remove('active');
+                }
+                if (tabEl && tabEl.classList.contains('active')) {
+                    tabEl.classList.remove('active');
+                    // Automatically fallback to first available active module
+                    if (userMods.length > 0) switchTab(userMods[0]);
+                    else switchTab('profile');
+                }
+            }
+        });
 
         // Superadmin Restrictions for PDF Downloads
         if (isSuperadmin) {
@@ -1272,7 +1311,7 @@
         location.reload();
     }
 
-    /* Superadmin Settings & Accounts Table */
+    /* Superadmin Management & Settings */
     function saveAdminSecurityPasswords() {
         const pdfP = document.getElementById('adminPdfPassInput').value.trim();
         const recP = document.getElementById('adminRecyclePassInput').value.trim();
@@ -1303,13 +1342,13 @@
                 <tr>
                     <td class="col-name">${escapeHtml(u.name)}</td>
                     <td class="col-email">${escapeHtml(u.email)}</td>
-                    <td>
+                    <td class="col-role">
                         <select onchange="changeUserRole(${u.id}, this.value)">
                             <option value="user" ${u.role === 'user' ? 'selected' : ''}>User</option>
                             <option value="superadmin" ${u.role === 'superadmin' ? 'selected' : ''}>Superadmin</option>
                         </select>
                     </td>
-                    <td>
+                    <td class="col-modules">
                         <div class="module-checkbox-grid">
                             <label class="module-checkbox-item"><input type="checkbox" ${uMods.includes('standup') ? 'checked' : ''} onchange="toggleUserModuleWithConfirm(${u.id}, 'standup', this)"> Standup</label>
                             <label class="module-checkbox-item"><input type="checkbox" ${uMods.includes('mom') ? 'checked' : ''} onchange="toggleUserModuleWithConfirm(${u.id}, 'mom', this)"> MOM</label>
@@ -1317,7 +1356,7 @@
                             <label class="module-checkbox-item"><input type="checkbox" ${uMods.includes('history') ? 'checked' : ''} onchange="toggleUserModuleWithConfirm(${u.id}, 'history', this)"> History</label>
                         </div>
                     </td>
-                    <td>
+                    <td class="col-status">
                         <span class="micro-pill ${u.status === 'approved' ? 'pill-onsite' : 'pill-absent'}">${u.status}</span>
                     </td>
                     <td class="col-actions">
@@ -1349,7 +1388,7 @@
 
             localStorage.setItem('app_users', JSON.stringify(users));
 
-            // Sync immediately if modifying current user
+            // Sync immediately if modifying current user session
             if (currentUser && String(currentUser.id) === String(userId)) {
                 currentUser.modules = u.modules;
                 localStorage.setItem('current_user', JSON.stringify(currentUser));
