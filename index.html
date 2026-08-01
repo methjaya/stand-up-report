@@ -6,6 +6,8 @@
     <title>Sahansa The PM's Management Suite</title>
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* Minimalist Dark Theme Tokens */
         :root[data-theme="dark"] {
@@ -845,6 +847,10 @@
             <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             Notes & Reminders
         </li>
+        <li class="nav-item" onclick="switchTab('history')">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            History & Records
+        </li>
     </ul>
 
     <button class="theme-toggle-btn" onclick="toggleTheme()">
@@ -895,7 +901,7 @@
 
                 <div class="actions-group">
                     <button type="button" class="btn-secondary" onclick="clearDraft()">Reset Draft</button>
-                    <button type="button" class="btn-primary" onclick="openPasswordModal('standup')">Generate Standup PDF</button>
+                    <button type="button" class="btn-primary" onclick="saveStandupAndModal()">Save & Generate PDF</button>
                 </div>
             </form>
         </div>
@@ -947,11 +953,6 @@
                 <button type="button" class="btn-primary" onclick="openPasswordModal('mom')">Generate MOM PDF</button>
             </div>
         </div>
-
-        <div class="card">
-            <h3>Saved Minutes History</h3>
-            <div id="momLog"></div>
-        </div>
     </section>
 
     <!-- 3. SPECIAL NOTES & REMINDERS TAB -->
@@ -984,6 +985,24 @@
 
             <button type="button" class="btn-primary" onclick="saveNote()">Add Reminder Note</button>
         </div>
+    </section>
+
+    <!-- 4. HISTORY & SAVED RECORDS TAB -->
+    <section id="tab-history" class="tab-content">
+        <div class="page-header">
+            <h1>History & Saved Records</h1>
+            <p>Review previously saved stand-ups, meeting minutes, and notes.</p>
+        </div>
+
+        <div class="card">
+            <h3>Saved Stand-Up Reports</h3>
+            <div id="standupHistoryLog"></div>
+        </div>
+
+        <div class="card">
+            <h3>Saved Meeting Minutes (MOM)</h3>
+            <div id="momLog"></div>
+        </div>
 
         <div class="card">
             <h3>Active Reminders & Notes</h3>
@@ -1008,6 +1027,15 @@
 </div>
 
 <script>
+    /* Supabase Credentials Setup (Optional for Cloud Sync) */
+    const SUPABASE_URL = "https://meqgageanrrnzskzbcqg.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lcWdhZ2VhbnJybnpza3piY3FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NDQwMDYsImV4cCI6MjEwMTEyMDAwNn0.zAY0I9vEcihbtM5vBYZWyZG-fEZQiMpdY_PMi9jCR_g";
+    let supabaseClient = null;
+
+    if (SUPABASE_URL !== "YOUR_SUPABASE_URL" && typeof supabase !== 'undefined') {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
     const DEFAULT_PASSWORD = "2522";
     const DRAFT_KEY = "sahansa_pm_standup_draft";
     let activePdfType = "standup";
@@ -1038,19 +1066,15 @@
         loadLogs();
     });
 
-    /* Mobile Drawer Controls */
+    /* Mobile Controls */
     function toggleMobileMenu() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
     }
 
     function closeMobileMenu() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
     }
 
     /* Theme Switcher */
@@ -1061,14 +1085,14 @@
         document.getElementById('themeLabel').innerText = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
     }
 
-    /* Tab Navigation */
+    /* Tab Switcher */
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
         document.getElementById(`tab-${tabId}`).classList.add('active');
         
-        const tabMap = { 'standup': 0, 'mom': 1, 'notes': 2 };
+        const tabMap = { 'standup': 0, 'mom': 1, 'notes': 2, 'history': 3 };
         document.querySelectorAll('.nav-item')[tabMap[tabId]].classList.add('active');
 
         closeMobileMenu();
@@ -1197,8 +1221,51 @@
         }
     }
 
-    /* MOM Local Storage */
-    function saveMOM() {
+    /* Save Stand-Up Record to History / Supabase */
+    async function saveStandupAndModal() {
+        const reportDate = document.getElementById('reportDate').value;
+        const reportTime = document.getElementById('reportTime').value;
+
+        const attendance = {};
+        const updates = {};
+
+        teamMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const statusEl = document.getElementById(`att_status_${memberId}`);
+            if (statusEl) attendance[member] = statusEl.value;
+        });
+
+        updateMembers.forEach((member) => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const textarea = document.getElementById(`update_${memberId}`);
+            if (textarea) updates[member] = textarea.value;
+        });
+
+        const record = { date: reportDate, time: reportTime, attendance, updates };
+
+        // Save Local
+        const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
+        logs.unshift(record);
+        localStorage.setItem('standup_logs', JSON.stringify(logs));
+
+        // Save Cloud if Supabase configured
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('standup_reports').insert([{
+                    report_date: reportDate,
+                    report_time: reportTime,
+                    attendance: attendance,
+                    updates: updates
+                }]);
+            } catch (err) { console.error("Supabase Sync Error", err); }
+        }
+
+        loadLogs();
+        openPasswordModal('standup');
+    }
+
+    /* MOM Storage */
+    async function saveMOM() {
         const title = document.getElementById('momTitle').value || "Meeting Minutes";
         const attendees = document.getElementById('momAttendees').value || "All Members";
         const date = document.getElementById('momDate').value || new Date().toISOString().split('T')[0];
@@ -1208,15 +1275,32 @@
 
         if (!discussions) return alert("Please enter key discussions.");
 
+        const record = { title, attendees, date, time, discussions, actions };
+
+        // Save Local
         const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
-        logs.unshift({ title, attendees, date, time, discussions, actions });
+        logs.unshift(record);
         localStorage.setItem('mom_logs', JSON.stringify(logs));
+
+        // Save Cloud if Supabase configured
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('mom_records').insert([{
+                    title: title,
+                    attendees: attendees,
+                    meeting_date: date,
+                    meeting_time: time,
+                    discussions: discussions,
+                    actions: actions
+                }]);
+            } catch (err) { console.error("Supabase Sync Error", err); }
+        }
 
         alert("Meeting Minutes saved successfully!");
         loadLogs();
     }
 
-    /* Notes Local Storage */
+    /* Notes Storage */
     function saveNote() {
         const title = document.getElementById('noteTitle').value || "Untitled Note";
         const priority = document.getElementById('notePriority').value;
@@ -1234,17 +1318,29 @@
     }
 
     function loadLogs() {
+        // Standup Logs
+        const standupLogs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
+        document.getElementById('standupHistoryLog').innerHTML = standupLogs.length ? standupLogs.map(s => `
+            <div class="log-item">
+                <h5>Stand-Up Report</h5>
+                <p><strong>Date & Time:</strong> ${s.date} at ${s.time}</p>
+                <span class="meta-tag">Recorded Entry</span>
+            </div>
+        `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No stand-up reports saved yet.</p>';
+
+        // MOM Logs
         const momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
         document.getElementById('momLog').innerHTML = momLogs.length ? momLogs.map(m => `
             <div class="log-item">
                 <h5>${m.title}</h5>
-                <p><strong>Attendees:</strong> ${m.attendees}</p>
+                <p><strong>Attendees / Parties:</strong> ${m.attendees}</p>
                 <p style="margin-top:6px;"><strong>Key Decisions:</strong> ${m.discussions}</p>
                 <p style="margin-top:4px;"><strong>Action Items:</strong> ${m.actions || 'None'}</p>
                 <span class="meta-tag">Date: ${m.date} at ${m.time}</span>
             </div>
         `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No meeting minutes saved yet.</p>';
 
+        // Notes Logs
         const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
         document.getElementById('notesLog').innerHTML = notesLogs.length ? notesLogs.map(n => `
             <div class="log-item">
@@ -1255,7 +1351,7 @@
         `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No active reminders created.</p>';
     }
 
-    /* Security Password Verification */
+    /* Password Modal */
     function openPasswordModal(type) {
         activePdfType = type;
         document.getElementById('pdfPassword').value = '';
