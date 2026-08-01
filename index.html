@@ -9,7 +9,7 @@
     <!-- Supabase JS Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Minimalist Dark Theme Tokens */
+        /* Minimalist Dark & Light Theme Tokens */
         :root[data-theme="dark"] {
             --bg-base: #000000;
             --bg-surface: rgba(18, 18, 20, 0.85);
@@ -82,59 +82,39 @@
             transition: background 0.25s ease, color 0.25s ease;
         }
 
-        /* Splash Screen */
+        /* 3D Thunderbolt Splash Screen */
         .splash-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             z-index: 9999;
             transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
         .splash-screen.fade-out {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+            opacity: 0; visibility: hidden; pointer-events: none;
         }
 
         .bolt-container {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; width: 100px; height: 100px;
+            display: flex; align-items: center; justify-content: center;
             perspective: 600px;
         }
 
         .bolt-3d {
-            width: 64px;
-            height: 64px;
+            width: 64px; height: 64px;
             transform-style: preserve-3d;
             animation: floatRotate 2s infinite ease-in-out alternate;
             filter: drop-shadow(0 0 20px rgba(10, 132, 255, 0.8));
         }
 
-        .bolt-3d svg {
-            width: 100%;
-            height: 100%;
-            fill: url(#thunderGradient);
-        }
+        .bolt-3d svg { width: 100%; height: 100%; fill: url(#thunderGradient); }
 
         .splash-title {
-            margin-top: 20px;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            color: #ffffff;
-            text-transform: uppercase;
+            margin-top: 20px; font-size: 16px; font-weight: 600;
+            letter-spacing: 0.5px; color: #ffffff; text-transform: uppercase;
         }
 
         @keyframes floatRotate {
@@ -142,664 +122,249 @@
             100% { transform: rotateY(20deg) rotateX(-10deg) translateY(4px); }
         }
 
-        /* Mobile Header Bar */
+        /* Mobile Top Header */
         .mobile-header {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 56px;
-            background: var(--mobile-header-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--separator);
-            padding: 0 16px;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 90;
+            display: none; position: fixed; top: 0; left: 0; right: 0; height: 56px;
+            background: var(--mobile-header-bg); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--separator); padding: 0 16px;
+            align-items: center; justify-content: space-between; z-index: 90;
         }
 
         .mobile-header h2 {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--label-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 220px;
+            margin: 0; font-size: 15px; font-weight: 600; color: var(--label-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
         }
 
         .menu-toggle-btn {
-            background: transparent;
-            border: none;
-            color: var(--label-primary);
-            padding: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
+            background: transparent; border: none; color: var(--label-primary);
+            padding: 8px; cursor: pointer; display: flex; align-items: center; border-radius: 8px;
         }
 
-        .menu-toggle-btn svg {
-            width: 22px;
-            height: 22px;
-            stroke: var(--label-primary);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+        .menu-toggle-btn svg { width: 22px; height: 22px; stroke: var(--label-primary); fill: none; stroke-width: 2; }
 
         /* Sidebar Navigation */
         .sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border-right: 1px solid var(--separator);
-            padding: 28px 16px;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 100;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            width: 260px; background: var(--sidebar-bg); backdrop-filter: blur(24px);
+            border-right: 1px solid var(--separator); padding: 28px 16px;
+            display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0;
+            z-index: 100; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            z-index: 95;
-            opacity: 0;
-            transition: opacity 0.25s ease;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 95;
+            opacity: 0; transition: opacity 0.25s ease;
         }
 
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
 
         .brand {
-            padding: 0 8px 20px 8px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--separator);
+            padding: 0 8px 20px 8px; margin-bottom: 12px; border-bottom: 1px solid var(--separator);
         }
 
-        .sidebar-bolt-widget {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .sidebar-bolt-icon {
-            width: 32px;
-            height: 32px;
-            perspective: 300px;
-            flex-shrink: 0;
-        }
-
+        .sidebar-bolt-widget { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .sidebar-bolt-icon { width: 32px; height: 32px; perspective: 300px; flex-shrink: 0; }
         .sidebar-bolt-inner {
-            width: 100%;
-            height: 100%;
-            animation: floatRotateSidebar 3s infinite ease-in-out alternate;
+            width: 100%; height: 100%; animation: floatRotateSidebar 3s infinite ease-in-out alternate;
             filter: drop-shadow(0 0 8px rgba(10, 132, 255, 0.6));
         }
-
-        .sidebar-bolt-inner svg {
-            width: 100%;
-            height: 100%;
-            fill: var(--accent);
-        }
+        .sidebar-bolt-inner svg { width: 100%; height: 100%; fill: var(--accent); }
 
         @keyframes floatRotateSidebar {
             0% { transform: rotateY(-15deg) translateY(-2px); }
             100% { transform: rotateY(15deg) translateY(2px); }
         }
 
-        .brand h2 {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: -0.2px;
-            color: var(--label-primary);
-            line-height: 1.35;
-        }
+        .brand h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.2px; color: var(--label-primary); }
+        .brand p { margin: 2px 0 0 0; font-size: 11px; color: var(--accent); font-weight: 500; }
 
-        .brand p {
-            margin: 2px 0 0 0;
-            font-size: 11px;
-            color: var(--accent);
-            font-weight: 500;
-        }
-
-        .nav-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
+        .nav-menu { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
 
         .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--label-secondary);
-            cursor: pointer;
+            display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+            font-size: 14px; font-weight: 500; color: var(--label-secondary); cursor: pointer;
             transition: background-color 0.15s ease, color 0.15s ease;
         }
 
         .nav-item svg {
-            width: 17px;
-            height: 17px;
-            stroke: var(--label-secondary);
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
-            transition: stroke 0.15s ease;
+            width: 17px; height: 17px; stroke: var(--label-secondary); fill: none; stroke-width: 1.8;
+            stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: stroke 0.15s ease;
         }
 
-        .nav-item:hover {
-            background: var(--bg-elevated-2);
-            color: var(--label-primary);
-        }
-
-        .nav-item:hover svg {
-            stroke: var(--label-primary);
-        }
-
-        .nav-item.active {
-            background: var(--accent-soft);
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .nav-item.active svg {
-            stroke: var(--accent);
-        }
+        .nav-item:hover { background: var(--bg-elevated-2); color: var(--label-primary); }
+        .nav-item:hover svg { stroke: var(--label-primary); }
+        .nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+        .nav-item.active svg { stroke: var(--accent); }
 
         .theme-toggle-btn {
-            margin-top: auto;
-            margin-bottom: 10px;
-            background: transparent;
-            border: 1px solid var(--separator);
-            color: var(--label-secondary);
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            margin-top: auto; margin-bottom: 10px; background: transparent; border: 1px solid var(--separator);
+            color: var(--label-secondary); padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; display: flex; align-items: center; justify-content: space-between;
         }
 
-        .theme-toggle-btn:hover {
-            background: var(--bg-elevated-2);
-            color: var(--label-primary);
-        }
+        .theme-toggle-btn:hover { background: var(--bg-elevated-2); color: var(--label-primary); }
+        .theme-toggle-btn svg { width: 16px; height: 16px; fill: var(--accent); stroke: var(--accent); }
 
-        .theme-toggle-btn svg {
-            width: 16px;
-            height: 16px;
-            fill: var(--accent);
-            stroke: var(--accent);
-            stroke-width: 1;
-        }
-
-        .pm-badge {
-            padding: 10px;
-            font-size: 12px;
-            color: var(--label-secondary);
-        }
-
-        .pm-badge strong {
-            display: block;
-            color: var(--label-primary);
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .pm-badge { padding: 10px; font-size: 12px; color: var(--label-secondary); }
+        .pm-badge strong { display: block; color: var(--label-primary); font-size: 13px; font-weight: 600; }
 
         /* Workspace Area */
         .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 48px 56px;
-            max-width: 880px;
-            width: 100%;
+            margin-left: 260px; flex: 1; padding: 48px 56px; max-width: 880px; width: 100%;
         }
 
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: appleFadeIn 0.2s ease;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: appleFadeIn 0.2s ease; }
 
         @keyframes appleFadeIn {
             from { opacity: 0; transform: translateY(3px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .page-header {
-            margin-bottom: 32px;
-        }
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+        .page-header p { margin: 6px 0 0 0; font-size: 14px; color: var(--label-secondary); }
 
-        .page-header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .page-header p {
-            margin: 6px 0 0 0;
-            font-size: 14px;
-            color: var(--label-secondary);
-        }
-
-        /* Minimal Cards */
+        /* Cards & Inputs */
         .card {
-            background: var(--bg-elevated);
-            border: 1px solid var(--separator);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow-card);
+            background: var(--bg-elevated); border: 1px solid var(--separator); border-radius: 16px;
+            padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow-card);
         }
 
-        .form-group {
-            margin-bottom: 22px;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        .form-group { margin-bottom: 22px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
         label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--label-secondary);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            display: block; font-size: 12px; font-weight: 600; color: var(--label-secondary);
+            margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px;
         }
 
-        .field-hint {
-            font-size: 11px;
-            color: var(--label-tertiary);
-            margin-top: -4px;
-            margin-bottom: 8px;
-            text-transform: none;
-            letter-spacing: normal;
-        }
+        .field-hint { font-size: 11px; color: var(--label-tertiary); margin-top: -4px; margin-bottom: 8px; }
 
-        input[type="text"],
-        input[type="date"],
-        input[type="time"],
-        input[type="password"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 10px 12px;
-            background-color: var(--bg-elevated-2);
-            border: 1px solid var(--separator);
-            color: var(--label-primary);
-            border-radius: 9px;
-            font-family: inherit;
-            font-size: 14px;
-            box-sizing: border-box;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        input[type="text"], input[type="date"], input[type="time"], input[type="password"], select, textarea {
+            width: 100%; padding: 10px 12px; background-color: var(--bg-elevated-2);
+            border: 1px solid var(--separator); color: var(--label-primary); border-radius: 9px;
+            font-family: inherit; font-size: 14px; box-sizing: border-box; transition: border-color 0.15s ease;
         }
 
         input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-soft);
+            outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
         }
 
-        input::placeholder, textarea::placeholder {
-            color: var(--label-tertiary);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 76px;
-            line-height: 1.5;
-        }
+        input::placeholder, textarea::placeholder { color: var(--label-tertiary); }
+        textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
 
         /* Attendance Register */
-        .attendance-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
+        .attendance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .attendance-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-elevated-2);
-            padding: 10px 12px;
-            border-radius: 9px;
-            border: 1px solid var(--separator);
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-elevated-2); padding: 10px 12px; border-radius: 9px; border: 1px solid var(--separator);
         }
+        .attendance-row label { margin-bottom: 0; color: var(--label-primary); font-size: 14px; text-transform: none; }
+        .attendance-row select { width: auto; padding: 5px 8px; font-size: 13px; background: var(--bg-elevated-3); }
 
-        .attendance-row label {
-            margin-bottom: 0;
-            color: var(--label-primary);
-            font-size: 14px;
-            font-weight: 400;
-            text-transform: none;
-            letter-spacing: normal;
-        }
-
-        .attendance-row select {
-            width: auto;
-            padding: 5px 8px;
-            font-size: 13px;
-            background: var(--bg-elevated-3);
-        }
-
-        /* Member Update Card */
+        /* Member Update Cards */
         .member-update-card {
-            position: relative;
-            background: var(--bg-elevated-2);
-            border: 1px solid var(--separator);
-            padding: 16px 18px;
-            margin-bottom: 12px;
-            border-radius: 12px;
+            position: relative; background: var(--bg-elevated-2); border: 1px solid var(--separator);
+            padding: 16px 18px; margin-bottom: 12px; border-radius: 12px;
         }
 
-        .card-header-flex {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .card-header-flex h4 {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--label-primary);
-        }
-
-        .card-header-flex h4::before {
-            content: '';
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background-color: var(--status-onsite);
-            flex-shrink: 0;
-        }
+        .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .card-header-flex h4 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 600; }
+        .card-header-flex h4::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background-color: var(--status-onsite); }
 
         .member-update-card[data-status="On-site"] h4::before { background-color: var(--status-onsite); }
         .member-update-card[data-status="Online"] h4::before { background-color: var(--status-online); }
         .member-update-card[data-status="Absent"] h4::before { background-color: var(--status-absent); }
 
-        .status-pill {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--label-tertiary);
-        }
+        .status-pill { font-size: 11px; font-weight: 600; color: var(--label-tertiary); }
 
-        /* Buttons & Actions */
-        .actions-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 24px;
-        }
+        /* Action Buttons */
+        .actions-group { display: flex; gap: 10px; margin-top: 24px; }
 
         button.btn-primary {
-            flex: 2;
-            background-color: var(--accent);
-            color: #ffffff;
-            border: none;
-            padding: 12px 18px;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.15s ease;
+            flex: 2; background-color: var(--accent); color: #ffffff; border: none; padding: 12px 18px;
+            font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer;
         }
-
-        button.btn-primary:hover {
-            background-color: var(--accent-hover);
-        }
+        button.btn-primary:hover { background-color: var(--accent-hover); }
 
         button.btn-secondary {
-            flex: 1;
-            background-color: var(--bg-elevated-2);
-            color: var(--red);
-            border: 1px solid var(--separator);
-            padding: 12px 18px;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.15s ease;
+            flex: 1; background-color: var(--bg-elevated-2); color: var(--red); border: 1px solid var(--separator);
+            padding: 12px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer;
         }
+        button.btn-secondary:hover { background-color: var(--red-soft); }
 
-        button.btn-secondary:hover {
-            background-color: var(--red-soft);
-        }
+        .draft-status { font-size: 12px; color: var(--label-tertiary); text-align: right; margin-bottom: 12px; }
 
-        .draft-status {
-            font-size: 12px;
-            color: var(--label-tertiary);
-            text-align: right;
-            margin-bottom: 12px;
-        }
-
-        /* Password Modal */
+        /* Security Password Modal */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(16px); z-index: 1000;
+            justify-content: center; align-items: center;
         }
 
         .modal-card {
-            width: 90%;
-            max-width: 340px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--separator);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: var(--shadow-card);
+            width: 90%; max-width: 340px; background: var(--bg-elevated); border: 1px solid var(--separator);
+            border-radius: 16px; padding: 24px; text-align: center; box-shadow: var(--shadow-card);
         }
 
-        .modal-card h3 {
-            margin: 0 0 4px 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
+        .modal-card h3 { margin: 0 0 4px 0; font-size: 16px; font-weight: 600; }
+        .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .btn-modal { flex: 1; padding: 10px; border-radius: 9px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-modal-cancel { background-color: var(--bg-elevated-2); color: var(--label-primary); border: 1px solid var(--separator); }
+        .btn-modal-submit { background-color: var(--accent); color: white; }
+        .error-msg { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
 
-        .modal-card p {
-            margin: 0 0 16px 0;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .btn-modal {
-            flex: 1;
-            padding: 10px;
-            border-radius: 9px;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-        }
-
-        .btn-modal-cancel {
-            background-color: var(--bg-elevated-2);
-            color: var(--label-primary);
-            border: 1px solid var(--separator);
-        }
-
-        .btn-modal-submit {
-            background-color: var(--accent);
-            color: white;
-        }
-
-        .error-msg {
-            color: var(--red);
-            font-size: 12px;
-            margin-top: 8px;
-            display: none;
-        }
-
-        /* History Cards */
+        /* History Cards & Action Controls */
         .log-item {
-            padding: 16px;
-            background: var(--bg-elevated-2);
-            border: 1px solid var(--separator);
-            border-radius: 12px;
-            margin-bottom: 12px;
+            padding: 18px; background: var(--bg-elevated-2); border: 1px solid var(--separator);
+            border-radius: 12px; margin-bottom: 14px;
+        }
+        .log-item:last-child { margin-bottom: 0; }
+
+        .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .log-item h5 { margin: 0; font-size: 15px; font-weight: 600; color: var(--label-primary); }
+
+        .log-details-block {
+            font-size: 13px; color: var(--label-secondary); line-height: 1.5; margin-top: 8px;
+            background: var(--bg-elevated); padding: 12px; border-radius: 8px; border: 1px solid var(--separator);
         }
 
-        .log-item:last-child {
-            margin-bottom: 0;
+        .log-item-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+        .btn-log-action {
+            background: var(--bg-elevated-3); border: 1px solid var(--separator); color: var(--label-primary);
+            padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
         }
 
-        .log-item h5 {
-            margin: 0 0 6px 0;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--label-primary);
-        }
+        .btn-log-action:hover { background: var(--separator-strong); }
+        .btn-log-action.danger { color: var(--red); }
+        .btn-log-action.danger:hover { background: var(--red-soft); }
 
-        .log-item p {
-            margin: 0;
-            font-size: 13px;
-            color: var(--label-secondary);
-            line-height: 1.5;
-        }
-
-        .stats-pill-container {
-            display: flex;
-            gap: 8px;
-            margin: 8px 0;
-        }
-
-        .micro-pill {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 6px;
-        }
-
+        .stats-pill-container { display: flex; gap: 8px; margin: 8px 0; }
+        .micro-pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
         .pill-onsite { background: var(--green-soft); color: var(--green); }
         .pill-online { background: var(--accent-soft); color: var(--accent); }
         .pill-absent { background: var(--red-soft); color: var(--red); }
 
-        .meta-tag {
-            display: inline-block;
-            font-size: 11px;
-            color: var(--label-tertiary);
-            margin-top: 6px;
-        }
-
-        .badge-priority {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 5px;
-            margin-left: 8px;
-        }
-
+        .meta-tag { display: inline-block; font-size: 11px; color: var(--label-tertiary); margin-top: 6px; }
+        .badge-priority { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; margin-left: 8px; }
         .p-high { background: var(--red-soft); color: var(--red); }
         .p-medium { background: var(--orange-soft); color: var(--orange); }
         .p-low { background: var(--green-soft); color: var(--green); }
 
-        /* Media Queries */
         @media screen and (max-width: 768px) {
-            .mobile-header {
-                display: flex;
-            }
-
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 72px 16px 32px 16px;
-            }
-
-            .grid-2 {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .attendance-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .page-header h1 {
-                font-size: 24px;
-            }
-
-            .card {
-                padding: 18px 16px;
-            }
-
-            .actions-group {
-                flex-direction: column-reverse;
-            }
-
-            button.btn-primary, button.btn-secondary {
-                width: 100%;
-            }
+            .mobile-header { display: flex; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 72px 16px 32px 16px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+            .attendance-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 24px; }
+            .card { padding: 18px 16px; }
+            .actions-group { flex-direction: column-reverse; }
+            button.btn-primary, button.btn-secondary { width: 100%; }
         }
     </style>
 </head>
@@ -831,7 +396,6 @@
     </button>
 </div>
 
-<!-- Mobile Drawer Backdrop Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileMenu()"></div>
 
 <!-- Sidebar Navigation -->
@@ -940,7 +504,7 @@
                 </div>
                 <div>
                     <label>Attendees & Parties</label>
-                    <div class="field-hint">Group by company/party using "|" (e.g., AASL: Nuwan, Kulara | CL: Rajitha, Sahansa)</div>
+                    <div class="field-hint">Group by party using "|" (e.g. AASL: Nuwan, Kulara | CL: Rajitha, Sahansa)</div>
                     <input type="text" id="momAttendees" placeholder="e.g. AASL: Nuwan, Kulara | CL: Rajitha, Sahansa">
                 </div>
             </div>
@@ -1009,7 +573,7 @@
     <section id="tab-history" class="tab-content">
         <div class="page-header">
             <h1>History & Saved Records</h1>
-            <p>Review previously saved stand-ups, meeting minutes, and notes.</p>
+            <p>Review, re-download PDFs, edit, or delete previously saved records.</p>
         </div>
 
         <div class="card">
@@ -1045,7 +609,7 @@
 </div>
 
 <script>
-    /* Supabase Cloud Connection Parameters */
+    /* Supabase Credentials Setup */
     const SUPABASE_URL = "https://meqgageanrrnzskzbcqg.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lcWdhZ2VhbnJybnpza3piY3FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NDQwMDYsImV4cCI6MjEwMTEyMDAwNn0.zAY0I9vEcihbtM5vBYZWyZG-fEZQiMpdY_PMi9jCR_g";
     let supabaseClient = null;
@@ -1057,6 +621,7 @@
     const DEFAULT_PASSWORD = "2522";
     const DRAFT_KEY = "sahansa_pm_standup_draft";
     let activePdfType = "standup";
+    let activePdfData = null; // For downloading specific historical records
 
     const teamMembers = [
         "Rajitha", "Vinul", "Navodya", "Sahansa", 
@@ -1084,7 +649,7 @@
         loadLogs();
     });
 
-    /* Mobile Controls */
+    /* Mobile Navigation */
     function toggleMobileMenu() {
         document.getElementById('sidebar').classList.toggle('active');
         document.getElementById('sidebarOverlay').classList.toggle('active');
@@ -1261,7 +826,8 @@
             if (textarea) updates[member] = textarea.value;
         });
 
-        const record = { date: reportDate, time: reportTime, attendance, updates };
+        const id = Date.now();
+        const record = { id, date: reportDate, time: reportTime, attendance, updates };
 
         // Save Local
         const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
@@ -1280,11 +846,12 @@
             } catch (err) { console.error("Supabase Sync Error", err); }
         }
 
+        activePdfData = record;
         loadLogs();
         openPasswordModal('standup');
     }
 
-    /* MOM Storage */
+    /* Save MOM Record */
     async function saveMOM() {
         const title = document.getElementById('momTitle').value || "Meeting Minutes";
         const attendees = document.getElementById('momAttendees').value || "All Members";
@@ -1295,7 +862,8 @@
 
         if (!discussions) return alert("Please enter key discussions.");
 
-        const record = { title, attendees, date, time, discussions, actions };
+        const id = Date.now();
+        const record = { id, title, attendees, date, time, discussions, actions };
 
         // Save Local
         const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
@@ -1320,7 +888,7 @@
         loadLogs();
     }
 
-    /* Notes Storage */
+    /* Save Note Record */
     function saveNote() {
         const title = document.getElementById('noteTitle').value || "Untitled Note";
         const priority = document.getElementById('notePriority').value;
@@ -1328,8 +896,9 @@
 
         if (!content) return alert("Please enter note description.");
 
+        const id = Date.now();
         const logs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
-        logs.unshift({ title, priority, content, date: new Date().toLocaleDateString() });
+        logs.unshift({ id, title, priority, content, date: new Date().toLocaleDateString() });
         localStorage.setItem('notes_logs', JSON.stringify(logs));
 
         document.getElementById('noteTitle').value = '';
@@ -1337,9 +906,9 @@
         loadLogs();
     }
 
-    /* Asynchronously Load & Display History Logs */
+    /* Load History Records with Full Display, Re-download, Edit & Delete Options */
     async function loadLogs() {
-        // Load Stand-Up Reports
+        // --- 1. Load Stand-Up Reports ---
         let standupLogs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
         
         if (supabaseClient) {
@@ -1347,6 +916,7 @@
                 const { data, error } = await supabaseClient.from('standup_reports').select('*').order('id', { ascending: false });
                 if (!error && data && data.length) {
                     standupLogs = data.map(d => ({
+                        id: d.id,
                         date: d.report_date,
                         time: d.report_time,
                         attendance: d.attendance,
@@ -1358,25 +928,46 @@
 
         const standupContainer = document.getElementById('standupHistoryLog');
         if (standupLogs.length) {
-            standupContainer.innerHTML = standupLogs.map(s => {
-                let onsiteCount = 0, onlineCount = 0, absentCount = 0;
+            standupContainer.innerHTML = standupLogs.map((s, index) => {
+                let onsiteMembers = [], onlineMembers = [], absentMembers = [];
                 if (s.attendance) {
-                    Object.values(s.attendance).forEach(val => {
-                        if (val === 'On-site') onsiteCount++;
-                        else if (val === 'Online') onlineCount++;
-                        else absentCount++;
+                    Object.entries(s.attendance).forEach(([member, val]) => {
+                        if (val === 'On-site') onsiteMembers.push(member);
+                        else if (val === 'Online') onlineMembers.push(member);
+                        else absentMembers.push(member);
                     });
                 }
+
+                let updatesHtml = "";
+                if (s.updates) {
+                    updatesHtml = Object.entries(s.updates).map(([member, text]) => `
+                        <div><strong>${member}:</strong> ${escapeHtml(text || "No update")}</div>
+                    `).join('');
+                }
+
                 return `
                     <div class="log-item">
-                        <h5>Daily Stand-Up Report</h5>
-                        <p><strong>Date & Time:</strong> ${s.date} @ ${s.time}</p>
-                        <div class="stats-pill-container">
-                            <span class="micro-pill pill-onsite">On-Site: ${onsiteCount}</span>
-                            <span class="micro-pill pill-online">Online: ${onlineCount}</span>
-                            <span class="micro-pill pill-absent">Absent: ${absentCount}</span>
+                        <div class="log-header">
+                            <h5>Daily Stand-Up Report (${s.date})</h5>
+                            <span class="meta-tag">Time: ${s.time}</span>
                         </div>
-                        <span class="meta-tag">Saved Record</span>
+                        
+                        <div class="stats-pill-container">
+                            <span class="micro-pill pill-onsite">On-Site (${onsiteMembers.length}): ${onsiteMembers.join(', ') || 'None'}</span>
+                            <span class="micro-pill pill-online">Online (${onlineMembers.length}): ${onlineMembers.join(', ') || 'None'}</span>
+                            <span class="micro-pill pill-absent">Absent (${absentMembers.length}): ${absentMembers.join(', ') || 'None'}</span>
+                        </div>
+
+                        <div class="log-details-block">
+                            <strong>Member Updates:</strong>
+                            <div style="margin-top: 4px;">${updatesHtml || "No updates recorded."}</div>
+                        </div>
+
+                        <div class="log-item-actions">
+                            <button type="button" class="btn-log-action" onclick="redownloadStandupPDF(${index})">Re-Download PDF</button>
+                            <button type="button" class="btn-log-action" onclick="editStandupRecord(${index})">Edit Record</button>
+                            <button type="button" class="btn-log-action danger" onclick="deleteStandupRecord(${s.id}, ${index})">Delete</button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -1384,13 +975,14 @@
             standupContainer.innerHTML = '<p style="color: var(--label-tertiary); font-size: 13px;">No stand-up reports saved yet.</p>';
         }
 
-        // Load MOM Logs
+        // --- 2. Load MOM Logs ---
         let momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('mom_records').select('*').order('id', { ascending: false });
                 if (!error && data && data.length) {
                     momLogs = data.map(d => ({
+                        id: d.id,
                         title: d.title,
                         attendees: d.attendees,
                         date: d.meeting_date,
@@ -1404,28 +996,45 @@
 
         const momContainer = document.getElementById('momLog');
         if (momLogs.length) {
-            momContainer.innerHTML = momLogs.map(m => `
+            momContainer.innerHTML = momLogs.map((m, index) => `
                 <div class="log-item">
-                    <h5>${m.title}</h5>
-                    <p><strong>Attendees & Parties:</strong> ${m.attendees}</p>
-                    <p style="margin-top:6px;"><strong>Key Discussions:</strong> ${m.discussions}</p>
-                    <p style="margin-top:4px;"><strong>Action Items:</strong> ${m.actions || 'None'}</p>
-                    <span class="meta-tag">Date: ${m.date} at ${m.time}</span>
+                    <div class="log-header">
+                        <h5>${escapeHtml(m.title)}</h5>
+                        <span class="meta-tag">${m.date} @ ${m.time}</span>
+                    </div>
+                    <p><strong>Attendees & Parties:</strong> ${escapeHtml(m.attendees)}</p>
+                    
+                    <div class="log-details-block">
+                        <p><strong>Key Discussions:</strong> ${escapeHtml(m.discussions)}</p>
+                        <p style="margin-top: 6px;"><strong>Action Items:</strong> ${escapeHtml(m.actions || 'None')}</p>
+                    </div>
+
+                    <div class="log-item-actions">
+                        <button type="button" class="btn-log-action" onclick="redownloadMOMPDF(${index})">Re-Download PDF</button>
+                        <button type="button" class="btn-log-action" onclick="editMOMRecord(${index})">Edit Record</button>
+                        <button type="button" class="btn-log-action danger" onclick="deleteMOMRecord(${m.id}, ${index})">Delete</button>
+                    </div>
                 </div>
             `).join('');
         } else {
             momContainer.innerHTML = '<p style="color: var(--label-tertiary); font-size: 13px;">No meeting minutes saved yet.</p>';
         }
 
-        // Load Notes Logs
+        // --- 3. Load Notes Logs ---
         const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
         const notesContainer = document.getElementById('notesLog');
         if (notesLogs.length) {
-            notesContainer.innerHTML = notesLogs.map(n => `
+            notesContainer.innerHTML = notesLogs.map((n, index) => `
                 <div class="log-item">
-                    <h5>${n.title} <span class="badge-priority p-${n.priority.toLowerCase()}">${n.priority}</span></h5>
-                    <p>${n.content}</p>
-                    <span class="meta-tag">Added on ${n.date}</span>
+                    <div class="log-header">
+                        <h5>${escapeHtml(n.title)} <span class="badge-priority p-${n.priority.toLowerCase()}">${n.priority}</span></h5>
+                        <span class="meta-tag">${n.date}</span>
+                    </div>
+                    <div class="log-details-block">${escapeHtml(n.content)}</div>
+                    <div class="log-item-actions">
+                        <button type="button" class="btn-log-action" onclick="editNoteRecord(${index})">Edit Note</button>
+                        <button type="button" class="btn-log-action danger" onclick="deleteNoteRecord(${index})">Delete</button>
+                    </div>
                 </div>
             `).join('');
         } else {
@@ -1433,7 +1042,130 @@
         }
     }
 
-    /* Security Password Modal */
+    /* History Record Action Handlers */
+    function redownloadStandupPDF(index) {
+        const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
+        if (logs[index]) {
+            activePdfData = logs[index];
+            openPasswordModal('standup');
+        }
+    }
+
+    function redownloadMOMPDF(index) {
+        const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
+        if (logs[index]) {
+            activePdfData = logs[index];
+            openPasswordModal('mom');
+        }
+    }
+
+    function editStandupRecord(index) {
+        const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
+        const record = logs[index];
+        if (!record) return;
+
+        document.getElementById('reportDate').value = record.date;
+        document.getElementById('reportTime').value = record.time;
+
+        if (record.attendance) {
+            teamMembers.forEach(member => {
+                const memberId = member.toLowerCase().replace(/\s+/g, '_');
+                const select = document.getElementById(`att_status_${memberId}`);
+                if (select && record.attendance[member]) {
+                    select.value = record.attendance[member];
+                    updateMemberCardStatus(member);
+                }
+            });
+        }
+
+        if (record.updates) {
+            updateMembers.forEach(member => {
+                const memberId = member.toLowerCase().replace(/\s+/g, '_');
+                const textarea = document.getElementById(`update_${memberId}`);
+                if (textarea && record.updates[member]) {
+                    textarea.value = record.updates[member];
+                }
+            });
+        }
+
+        switchTab('standup');
+    }
+
+    function editMOMRecord(index) {
+        const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
+        const record = logs[index];
+        if (!record) return;
+
+        document.getElementById('momTitle').value = record.title;
+        document.getElementById('momAttendees').value = record.attendees;
+        document.getElementById('momDate').value = record.date;
+        document.getElementById('momTime').value = record.time;
+        document.getElementById('momDiscussions').value = record.discussions;
+        document.getElementById('momActions').value = record.actions;
+
+        switchTab('mom');
+    }
+
+    function editNoteRecord(index) {
+        const logs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
+        const record = logs[index];
+        if (!record) return;
+
+        document.getElementById('noteTitle').value = record.title;
+        document.getElementById('notePriority').value = record.priority;
+        document.getElementById('noteContent').value = record.content;
+
+        switchTab('notes');
+    }
+
+    async function deleteStandupRecord(dbId, index) {
+        if (!confirm("Are you sure you want to delete this Stand-Up Report?")) return;
+
+        let logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
+        logs.splice(index, 1);
+        localStorage.setItem('standup_logs', JSON.stringify(logs));
+
+        if (supabaseClient && dbId) {
+            try { await supabaseClient.from('standup_reports').delete().eq('id', dbId); }
+            catch (e) { console.error(e); }
+        }
+
+        loadLogs();
+    }
+
+    async function deleteMOMRecord(dbId, index) {
+        if (!confirm("Are you sure you want to delete this Meeting Minutes record?")) return;
+
+        let logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
+        logs.splice(index, 1);
+        localStorage.setItem('mom_logs', JSON.stringify(logs));
+
+        if (supabaseClient && dbId) {
+            try { await supabaseClient.from('mom_records').delete().eq('id', dbId); }
+            catch (e) { console.error(e); }
+        }
+
+        loadLogs();
+    }
+
+    function deleteNoteRecord(index) {
+        if (!confirm("Are you sure you want to delete this Note?")) return;
+
+        let logs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
+        logs.splice(index, 1);
+        localStorage.setItem('notes_logs', JSON.stringify(logs));
+
+        loadLogs();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /* Security Password Verification */
     function openPasswordModal(type) {
         activePdfType = type;
         document.getElementById('pdfPassword').value = '';
@@ -1465,20 +1197,29 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        const reportDate = document.getElementById('reportDate').value;
-        const reportTime = document.getElementById('reportTime').value;
+        const reportDate = activePdfData ? activePdfData.date : document.getElementById('reportDate').value;
+        const reportTime = activePdfData ? activePdfData.time : document.getElementById('reportTime').value;
 
         const onsite = [], online = [], absent = [], memberStatuses = {};
 
-        teamMembers.forEach((member) => {
-            const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            const status = document.getElementById(`att_status_${memberId}`).value;
-            memberStatuses[member] = status;
+        if (activePdfData && activePdfData.attendance) {
+            Object.entries(activePdfData.attendance).forEach(([member, status]) => {
+                memberStatuses[member] = status;
+                if (status === 'On-site') onsite.push(member);
+                else if (status === 'Online') online.push(member);
+                else absent.push(member);
+            });
+        } else {
+            teamMembers.forEach((member) => {
+                const memberId = member.toLowerCase().replace(/\s+/g, '_');
+                const status = document.getElementById(`att_status_${memberId}`).value;
+                memberStatuses[member] = status;
 
-            if (status === 'On-site') onsite.push(member);
-            else if (status === 'Online') online.push(member);
-            else absent.push(member);
-        });
+                if (status === 'On-site') onsite.push(member);
+                else if (status === 'Online') online.push(member);
+                else absent.push(member);
+            });
+        }
 
         let y = 20;
 
@@ -1576,7 +1317,13 @@
 
         updateMembers.forEach((member) => {
             const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            const updateText = document.getElementById(`update_${memberId}`).value.trim() || "No update submitted.";
+            let updateText = "No update submitted.";
+            if (activePdfData && activePdfData.updates) {
+                updateText = activePdfData.updates[member] || "No update submitted.";
+            } else {
+                updateText = document.getElementById(`update_${memberId}`).value.trim() || "No update submitted.";
+            }
+
             const memberStatus = memberStatuses[member] || 'On-site';
             
             const splitText = doc.splitTextToSize(updateText, 168);
@@ -1618,6 +1365,7 @@
         });
 
         doc.save(`Standup_Report_${reportDate}.pdf`);
+        activePdfData = null; // Reset
     }
 
     /* Meeting Minutes PDF Generator with Grouped Parties */
@@ -1625,12 +1373,12 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        const title = document.getElementById('momTitle').value || "Meeting Minutes";
-        const rawAttendees = document.getElementById('momAttendees').value || "All Members";
-        const date = document.getElementById('momDate').value || new Date().toISOString().split('T')[0];
-        const time = document.getElementById('momTime').value || "N/A";
-        const discussions = document.getElementById('momDiscussions').value || "None recorded.";
-        const actions = document.getElementById('momActions').value || "None recorded.";
+        const title = activePdfData ? activePdfData.title : (document.getElementById('momTitle').value || "Meeting Minutes");
+        const rawAttendees = activePdfData ? activePdfData.attendees : (document.getElementById('momAttendees').value || "All Members");
+        const date = activePdfData ? activePdfData.date : (document.getElementById('momDate').value || new Date().toISOString().split('T')[0]);
+        const time = activePdfData ? activePdfData.time : (document.getElementById('momTime').value || "N/A");
+        const discussions = activePdfData ? activePdfData.discussions : (document.getElementById('momDiscussions').value || "None recorded.");
+        const actions = activePdfData ? activePdfData.actions : (document.getElementById('momActions').value || "None recorded.");
 
         const parties = rawAttendees.split('|').map(p => p.trim()).filter(Boolean);
 
@@ -1732,6 +1480,7 @@
         doc.text(splitAct, 20, y + 8);
 
         doc.save(`Meeting_Minutes_${date}.pdf`);
+        activePdfData = null; // Reset
     }
 </script>
 
