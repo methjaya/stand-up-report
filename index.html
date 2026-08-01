@@ -82,7 +82,7 @@
             transition: background 0.25s ease, color 0.25s ease;
         }
 
-        /* 3D Thunderbolt Splash Screen */
+        /* Splash Screen */
         .splash-screen {
             position: fixed;
             top: 0;
@@ -234,7 +234,6 @@
             border-bottom: 1px solid var(--separator);
         }
 
-        /* 3D Sidebar Thunderbolt Widget */
         .sidebar-bolt-widget {
             display: flex;
             align-items: center;
@@ -336,7 +335,6 @@
             stroke: var(--accent);
         }
 
-        /* Thunderbolt Theme Toggle Button */
         .theme-toggle-btn {
             margin-top: auto;
             margin-bottom: 10px;
@@ -695,19 +693,22 @@
             display: none;
         }
 
-        /* History Logs */
+        /* History Cards */
         .log-item {
-            padding: 14px 0;
-            border-bottom: 1px solid var(--separator);
+            padding: 16px;
+            background: var(--bg-elevated-2);
+            border: 1px solid var(--separator);
+            border-radius: 12px;
+            margin-bottom: 12px;
         }
 
         .log-item:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
         }
 
         .log-item h5 {
             margin: 0 0 6px 0;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--label-primary);
         }
@@ -719,11 +720,28 @@
             line-height: 1.5;
         }
 
+        .stats-pill-container {
+            display: flex;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .micro-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .pill-onsite { background: var(--green-soft); color: var(--green); }
+        .pill-online { background: var(--accent-soft); color: var(--accent); }
+        .pill-absent { background: var(--red-soft); color: var(--red); }
+
         .meta-tag {
             display: inline-block;
             font-size: 11px;
             color: var(--label-tertiary);
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .badge-priority {
@@ -1027,12 +1045,12 @@
 </div>
 
 <script>
-    /* Supabase Credentials Setup (Optional for Cloud Sync) */
+    /* Supabase Cloud Connection Parameters */
     const SUPABASE_URL = "https://meqgageanrrnzskzbcqg.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lcWdhZ2VhbnJybnpza3piY3FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NDQwMDYsImV4cCI6MjEwMTEyMDAwNn0.zAY0I9vEcihbtM5vBYZWyZG-fEZQiMpdY_PMi9jCR_g";
     let supabaseClient = null;
 
-    if (SUPABASE_URL !== "YOUR_SUPABASE_URL" && typeof supabase !== 'undefined') {
+    if (SUPABASE_URL !== "" && typeof supabase !== 'undefined') {
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
 
@@ -1094,6 +1112,8 @@
         
         const tabMap = { 'standup': 0, 'mom': 1, 'notes': 2, 'history': 3 };
         document.querySelectorAll('.nav-item')[tabMap[tabId]].classList.add('active');
+
+        if (tabId === 'history') loadLogs();
 
         closeMobileMenu();
     }
@@ -1317,41 +1337,103 @@
         loadLogs();
     }
 
-    function loadLogs() {
-        // Standup Logs
-        const standupLogs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
-        document.getElementById('standupHistoryLog').innerHTML = standupLogs.length ? standupLogs.map(s => `
-            <div class="log-item">
-                <h5>Stand-Up Report</h5>
-                <p><strong>Date & Time:</strong> ${s.date} at ${s.time}</p>
-                <span class="meta-tag">Recorded Entry</span>
-            </div>
-        `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No stand-up reports saved yet.</p>';
+    /* Asynchronously Load & Display History Logs */
+    async function loadLogs() {
+        // Load Stand-Up Reports
+        let standupLogs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
+        
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('standup_reports').select('*').order('id', { ascending: false });
+                if (!error && data && data.length) {
+                    standupLogs = data.map(d => ({
+                        date: d.report_date,
+                        time: d.report_time,
+                        attendance: d.attendance,
+                        updates: d.updates
+                    }));
+                }
+            } catch (e) { console.error(e); }
+        }
 
-        // MOM Logs
-        const momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
-        document.getElementById('momLog').innerHTML = momLogs.length ? momLogs.map(m => `
-            <div class="log-item">
-                <h5>${m.title}</h5>
-                <p><strong>Attendees / Parties:</strong> ${m.attendees}</p>
-                <p style="margin-top:6px;"><strong>Key Decisions:</strong> ${m.discussions}</p>
-                <p style="margin-top:4px;"><strong>Action Items:</strong> ${m.actions || 'None'}</p>
-                <span class="meta-tag">Date: ${m.date} at ${m.time}</span>
-            </div>
-        `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No meeting minutes saved yet.</p>';
+        const standupContainer = document.getElementById('standupHistoryLog');
+        if (standupLogs.length) {
+            standupContainer.innerHTML = standupLogs.map(s => {
+                let onsiteCount = 0, onlineCount = 0, absentCount = 0;
+                if (s.attendance) {
+                    Object.values(s.attendance).forEach(val => {
+                        if (val === 'On-site') onsiteCount++;
+                        else if (val === 'Online') onlineCount++;
+                        else absentCount++;
+                    });
+                }
+                return `
+                    <div class="log-item">
+                        <h5>Daily Stand-Up Report</h5>
+                        <p><strong>Date & Time:</strong> ${s.date} @ ${s.time}</p>
+                        <div class="stats-pill-container">
+                            <span class="micro-pill pill-onsite">On-Site: ${onsiteCount}</span>
+                            <span class="micro-pill pill-online">Online: ${onlineCount}</span>
+                            <span class="micro-pill pill-absent">Absent: ${absentCount}</span>
+                        </div>
+                        <span class="meta-tag">Saved Record</span>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            standupContainer.innerHTML = '<p style="color: var(--label-tertiary); font-size: 13px;">No stand-up reports saved yet.</p>';
+        }
 
-        // Notes Logs
+        // Load MOM Logs
+        let momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('mom_records').select('*').order('id', { ascending: false });
+                if (!error && data && data.length) {
+                    momLogs = data.map(d => ({
+                        title: d.title,
+                        attendees: d.attendees,
+                        date: d.meeting_date,
+                        time: d.meeting_time,
+                        discussions: d.discussions,
+                        actions: d.actions
+                    }));
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        const momContainer = document.getElementById('momLog');
+        if (momLogs.length) {
+            momContainer.innerHTML = momLogs.map(m => `
+                <div class="log-item">
+                    <h5>${m.title}</h5>
+                    <p><strong>Attendees & Parties:</strong> ${m.attendees}</p>
+                    <p style="margin-top:6px;"><strong>Key Discussions:</strong> ${m.discussions}</p>
+                    <p style="margin-top:4px;"><strong>Action Items:</strong> ${m.actions || 'None'}</p>
+                    <span class="meta-tag">Date: ${m.date} at ${m.time}</span>
+                </div>
+            `).join('');
+        } else {
+            momContainer.innerHTML = '<p style="color: var(--label-tertiary); font-size: 13px;">No meeting minutes saved yet.</p>';
+        }
+
+        // Load Notes Logs
         const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
-        document.getElementById('notesLog').innerHTML = notesLogs.length ? notesLogs.map(n => `
-            <div class="log-item">
-                <h5>${n.title} <span class="badge-priority p-${n.priority.toLowerCase()}">${n.priority}</span></h5>
-                <p>${n.content}</p>
-                <span class="meta-tag">Added on ${n.date}</span>
-            </div>
-        `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No active reminders created.</p>';
+        const notesContainer = document.getElementById('notesLog');
+        if (notesLogs.length) {
+            notesContainer.innerHTML = notesLogs.map(n => `
+                <div class="log-item">
+                    <h5>${n.title} <span class="badge-priority p-${n.priority.toLowerCase()}">${n.priority}</span></h5>
+                    <p>${n.content}</p>
+                    <span class="meta-tag">Added on ${n.date}</span>
+                </div>
+            `).join('');
+        } else {
+            notesContainer.innerHTML = '<p style="color: var(--label-tertiary); font-size: 13px;">No active reminders created.</p>';
+        }
     }
 
-    /* Password Modal */
+    /* Security Password Modal */
     function openPasswordModal(type) {
         activePdfType = type;
         document.getElementById('pdfPassword').value = '';
@@ -1406,12 +1488,12 @@
         doc.setFontSize(16);
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.text("SAHANSA THE PM'S MANAGEMENT SUITE", 16, y);
+        doc.text("DAILY STAND-UP REPORT", 16, y);
 
         doc.setFontSize(11);
         doc.setTextColor(142, 142, 147);
         doc.setFont("helvetica", "normal");
-        doc.text("Daily Stand Up Report", 16, y + 7);
+        doc.text("Sahansa The PM's Management Suite", 16, y + 7);
 
         doc.setFontSize(9);
         doc.setTextColor(10, 132, 255);
@@ -1550,7 +1632,6 @@
         const discussions = document.getElementById('momDiscussions').value || "None recorded.";
         const actions = document.getElementById('momActions').value || "None recorded.";
 
-        // Split multi-party attendees by "|" separator or commas
         const parties = rawAttendees.split('|').map(p => p.trim()).filter(Boolean);
 
         let y = 20;
@@ -1561,12 +1642,12 @@
         doc.setFontSize(16);
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.text("SAHANSA THE PM'S MANAGEMENT SUITE", 16, y);
+        doc.text("MEETING MINUTES (MOM)", 16, y);
 
         doc.setFontSize(11);
         doc.setTextColor(142, 142, 147);
         doc.setFont("helvetica", "normal");
-        doc.text("Official Meeting Minutes (MOM)", 16, y + 7);
+        doc.text("Sahansa The PM's Management Suite", 16, y + 7);
 
         doc.setFontSize(9);
         doc.setTextColor(10, 132, 255);
