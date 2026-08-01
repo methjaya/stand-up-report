@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sahansa The PM's Management Suite</title>
-    <!-- Thunderbolt Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230a84ff'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+    <!-- Shiny Thunderbolt Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='shinyFav' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230a84ff'/><stop offset='50%25' stop-color='%2330d158'/><stop offset='100%25' stop-color='%23ffd60a'/></linearGradient></defs><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z' fill='url(%23shinyFav)'/></svg>">
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Supabase JS Client Library -->
@@ -428,7 +428,6 @@
 
         <div class="auth-tabs">
             <button class="auth-tab-btn active" id="tabBtnLogin" onclick="setAuthTab('login')">Login</button>
-            <button class="auth-tab-btn" id="tabBtnSignup" onclick="setAuthTab('signup')">Sign Up</button>
             <button class="auth-tab-btn" id="tabBtnForgot" onclick="setAuthTab('forgot')">Forgot Pswd</button>
         </div>
 
@@ -459,35 +458,6 @@
             </div>
             <div class="error-msg" id="masterOtpError">Incorrect OTP code.</div>
             <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Verify & Set Master Password</button>
-        </form>
-
-        <!-- Sign Up Form -->
-        <form id="signupForm" style="display: none;" onsubmit="handleSignup(event)">
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="signupName" placeholder="e.g. Sahansa Perera" required>
-            </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="signupEmail" placeholder="name@company.com" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="signupPassword" placeholder="Create password" required>
-            </div>
-            <div class="error-msg" id="signupError"></div>
-            <button type="submit" class="btn-primary" id="btnSendSignupCode" style="width: 100%; margin-top: 10px;">Send Verification Code</button>
-        </form>
-
-        <!-- Verification Step Form -->
-        <form id="verifyForm" style="display: none;" onsubmit="handleVerifyCode(event)">
-            <div class="form-group">
-                <label>6-Digit Verification Code</label>
-                <div class="field-hint">Enter verification code sent to your email</div>
-                <input type="text" id="verifyCode" placeholder="Enter 6-digit code (e.g. 123456)" required>
-            </div>
-            <div class="error-msg" id="verifyError">Incorrect code.</div>
-            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Verify & Submit Account</button>
         </form>
 
         <!-- Forgot Password Form -->
@@ -764,7 +734,26 @@
     <section id="tab-admin" class="tab-content">
         <div class="page-header">
             <h1>Superadmin Control Panel</h1>
-            <p>Manage user account approvals, role assignments, module permissions, and master passwords.</p>
+            <p>Create user accounts, manage role assignments, module permissions, and master passwords.</p>
+        </div>
+
+        <!-- Superadmin Create User Account Form Card -->
+        <div class="card">
+            <h3>Create New User Account</h3>
+            <div class="field-hint">A 6-digit OTP will automatically be sent to the user's email to verify first login.</div>
+            <form onsubmit="handleCreateUserByAdmin(event)" style="margin-top: 14px;">
+                <div class="form-group grid-2">
+                    <div>
+                        <label>User Full Name</label>
+                        <input type="text" id="adminNewUserName" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div>
+                        <label>User Email Address</label>
+                        <input type="email" id="adminNewUserEmail" placeholder="user@company.com" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" id="btnAdminCreateUser" style="width: auto;">Create & Send Email OTP</button>
+            </form>
         </div>
 
         <!-- Masked Security Password Configuration Card -->
@@ -907,7 +896,6 @@
     };
 
     let currentUser = null;
-    let pendingVerificationAccount = null;
     let pendingResetEmail = null;
     let pendingMasterSetupCode = null;
 
@@ -1029,7 +1017,6 @@
                 }
                 if (tabEl && tabEl.classList.contains('active')) {
                     tabEl.classList.remove('active');
-                    // Automatically fallback to first available active module
                     if (userMods.length > 0) switchTab(userMods[0]);
                     else switchTab('profile');
                 }
@@ -1054,8 +1041,6 @@
     function setAuthTab(tab) {
         document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('verifyForm').style.display = 'none';
         document.getElementById('forgotForm').style.display = 'none';
         document.getElementById('resetPassForm').style.display = 'none';
         document.getElementById('masterOtpForm').style.display = 'none';
@@ -1064,10 +1049,6 @@
             document.getElementById('tabBtnLogin').classList.add('active');
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('authSubtitle').innerText = "Sign in to access your workspace";
-        } else if (tab === 'signup') {
-            document.getElementById('tabBtnSignup').classList.add('active');
-            document.getElementById('signupForm').style.display = 'block';
-            document.getElementById('authSubtitle').innerText = "Create an account for PM Suite";
         } else if (tab === 'forgot') {
             document.getElementById('tabBtnForgot').classList.add('active');
             document.getElementById('forgotForm').style.display = 'block';
@@ -1085,20 +1066,22 @@
         const user = users.find(u => u.email === email);
 
         if (user) {
-            if (user.email === defaultSuperadmin.email && (!user.password || user.password === "")) {
-                const code = Math.floor(100000 + Math.random() * 900000).toString();
-                pendingMasterSetupCode = code;
-                
-                alert("First time setup for Master Account detected. Sending OTP code to methjaya252@gmail.com...");
-                await sendEmailCode(user.email, code);
+            // Master Account or User First-Time OTP Setup
+            if ((user.email === defaultSuperadmin.email && (!user.password || user.password === "")) || (user.otpSetup && user.otpSetup === password)) {
+                if (user.email === defaultSuperadmin.email && (!user.password || user.password === "")) {
+                    const code = Math.floor(100000 + Math.random() * 900000).toString();
+                    pendingMasterSetupCode = code;
+                    alert("First time setup for Master Account detected. Sending OTP code to methjaya252@gmail.com...");
+                    await sendEmailCode(user.email, code);
 
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('masterOtpForm').style.display = 'block';
-                document.getElementById('authSubtitle').innerText = "Set Master Superadmin Password";
-                return;
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('masterOtpForm').style.display = 'block';
+                    document.getElementById('authSubtitle').innerText = "Set Master Superadmin Password";
+                    return;
+                }
             }
 
-            if (user.password !== password) {
+            if (user.password !== password && user.otpSetup !== password) {
                 document.getElementById('loginError').innerText = "Invalid credentials or password.";
                 document.getElementById('loginError').style.display = 'block';
                 return;
@@ -1159,68 +1142,53 @@
         }
     }
 
-    async function handleSignup(e) {
+    /* Superadmin Direct User Account Creation */
+    async function handleCreateUserByAdmin(e) {
         e.preventDefault();
-        const name = document.getElementById('signupName').value.trim();
-        const email = document.getElementById('signupEmail').value.trim().toLowerCase();
-        const password = document.getElementById('signupPassword').value;
+        const name = document.getElementById('adminNewUserName').value.trim();
+        const email = document.getElementById('adminNewUserEmail').value.trim().toLowerCase();
 
         await initUsers();
         const users = JSON.parse(localStorage.getItem('app_users') || '[]');
 
         if (users.some(u => u.email === email)) {
-            document.getElementById('signupError').innerText = "Email already registered.";
-            document.getElementById('signupError').style.display = 'block';
-            return;
+            return alert("An account with this email address already exists.");
         }
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        pendingVerificationAccount = { name, email, password, code };
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            email: email,
+            password: otpCode, // Initial password set to OTP code
+            otpSetup: otpCode,
+            role: "user",
+            status: "approved",
+            modules: ['standup', 'mom', 'notes', 'history']
+        };
 
-        const btn = document.getElementById('btnSendSignupCode');
-        btn.innerText = "Sending Code...";
+        const btn = document.getElementById('btnAdminCreateUser');
+        btn.innerText = "Sending OTP...";
         btn.disabled = true;
 
         try {
-            await sendEmailCode(email, code);
-            document.getElementById('signupForm').style.display = 'none';
-            document.getElementById('verifyForm').style.display = 'block';
-            document.getElementById('authSubtitle').innerText = "Verify your email address";
-        } catch (err) {
-            alert("Failed to send verification email. Please check EmailJS settings.");
-        } finally {
-            btn.innerText = "Send Verification Code";
-            btn.disabled = false;
-        }
-    }
-
-    async function handleVerifyCode(e) {
-        e.preventDefault();
-        const entered = document.getElementById('verifyCode').value.trim();
-
-        if (pendingVerificationAccount && entered === pendingVerificationAccount.code) {
-            const newUser = {
-                id: Date.now(),
-                name: pendingVerificationAccount.name,
-                email: pendingVerificationAccount.email,
-                password: pendingVerificationAccount.password,
-                role: "user",
-                status: "pending_approval",
-                modules: ['standup', 'mom', 'notes', 'history']
-            };
-
-            const users = JSON.parse(localStorage.getItem('app_users') || '[]');
+            await sendEmailCode(email, otpCode);
             users.push(newUser);
             localStorage.setItem('app_users', JSON.stringify(users));
 
             if (supabaseClient) {
-                try { await supabaseClient.from('app_users').insert([newUser]); } catch (e) { console.error(e); }
+                try { await supabaseClient.from('app_users').insert([newUser]); } catch (err){}
             }
 
-            alert("Account registered successfully! Awaiting Superadmin approval before login.");
-            setAuthTab('login');
-        } else {
-            document.getElementById('verifyError').style.display = 'block';
+            document.getElementById('adminNewUserName').value = '';
+            document.getElementById('adminNewUserEmail').value = '';
+            alert(`User account created! A 6-digit OTP code (${otpCode}) has been sent to ${email}.`);
+            renderUserAdminTable();
+        } catch (err) {
+            alert("Failed to send OTP email invitation.");
+        } finally {
+            btn.innerText = "Create & Send Email OTP";
+            btn.disabled = false;
         }
     }
 
@@ -1263,6 +1231,7 @@
             const user = users.find(u => u.email === pendingResetEmail.email);
             if (user) {
                 user.password = newPass;
+                delete user.otpSetup;
                 localStorage.setItem('app_users', JSON.stringify(users));
 
                 if (supabaseClient) {
@@ -1283,15 +1252,19 @@
         const newP = document.getElementById('profNewPass').value;
         const confP = document.getElementById('profConfirmPass').value;
 
-        if (curr !== currentUser.password) return alert("Existing password is incorrect.");
+        if (curr !== currentUser.password && curr !== currentUser.otpSetup) return alert("Existing password is incorrect.");
         if (newP !== confP) return alert("New password and confirm password do not match.");
 
         currentUser.password = newP;
+        delete currentUser.otpSetup;
         localStorage.setItem('current_user', JSON.stringify(currentUser));
 
         const users = JSON.parse(localStorage.getItem('app_users') || '[]');
         const u = users.find(x => x.email === currentUser.email);
-        if (u) u.password = newP;
+        if (u) {
+            u.password = newP;
+            delete u.otpSetup;
+        }
         localStorage.setItem('app_users', JSON.stringify(users));
 
         if (supabaseClient) {
@@ -1412,6 +1385,7 @@
         if (!newPass) return;
 
         u.password = newPass;
+        delete u.otpSetup;
         localStorage.setItem('app_users', JSON.stringify(users));
 
         if (supabaseClient) {
