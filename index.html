@@ -7,46 +7,48 @@
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* Apple System Design Tokens */
+        /* Minimalist Dark Theme Tokens */
         :root[data-theme="dark"] {
             --bg-base: #000000;
-            --bg-elevated: #1c1c1e;
-            --bg-elevated-2: #2c2c2e;
-            --bg-elevated-3: #3a3a3c;
-            --sidebar-bg: rgba(22, 22, 24, 0.88);
-            --mobile-header-bg: rgba(22, 22, 24, 0.85);
-            --separator: rgba(255, 255, 255, 0.09);
-            --separator-strong: rgba(255, 255, 255, 0.14);
-            --label-primary: #f5f5f7;
-            --label-secondary: rgba(235, 235, 245, 0.6);
-            --label-tertiary: rgba(235, 235, 245, 0.35);
+            --bg-surface: rgba(18, 18, 20, 0.85);
+            --bg-elevated: #18181b;
+            --bg-elevated-2: #27272a;
+            --bg-elevated-3: #3f3f46;
+            --sidebar-bg: rgba(12, 12, 14, 0.9);
+            --mobile-header-bg: rgba(12, 12, 14, 0.88);
+            --separator: rgba(255, 255, 255, 0.08);
+            --separator-strong: rgba(255, 255, 255, 0.16);
+            --label-primary: #f4f4f5;
+            --label-secondary: #a1a1aa;
+            --label-tertiary: #71717a;
             --accent: #0a84ff;
             --accent-hover: #3396ff;
-            --accent-soft: rgba(10, 132, 255, 0.14);
+            --accent-soft: rgba(10, 132, 255, 0.12);
             --green: #30d158;
-            --green-soft: rgba(48, 209, 88, 0.14);
+            --green-soft: rgba(48, 209, 88, 0.12);
             --orange: #ff9f0a;
-            --orange-soft: rgba(255, 159, 10, 0.14);
+            --orange-soft: rgba(255, 159, 10, 0.12);
             --red: #ff453a;
-            --red-soft: rgba(255, 69, 58, 0.14);
+            --red-soft: rgba(255, 69, 58, 0.12);
             --status-onsite: #30d158;
             --status-online: #0a84ff;
             --status-absent: #ff453a;
-            --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.4);
+            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         :root[data-theme="light"] {
-            --bg-base: #f2f2f7;
+            --bg-base: #f4f4f5;
+            --bg-surface: rgba(255, 255, 255, 0.9);
             --bg-elevated: #ffffff;
-            --bg-elevated-2: #f2f2f7;
-            --bg-elevated-3: #e5e5ea;
-            --sidebar-bg: rgba(248, 248, 250, 0.92);
-            --mobile-header-bg: rgba(248, 248, 250, 0.88);
+            --bg-elevated-2: #f4f4f5;
+            --bg-elevated-3: #e4e4e7;
+            --sidebar-bg: rgba(250, 250, 250, 0.92);
+            --mobile-header-bg: rgba(250, 250, 250, 0.9);
             --separator: rgba(0, 0, 0, 0.08);
-            --separator-strong: rgba(0, 0, 0, 0.12);
-            --label-primary: #1d1d1f;
-            --label-secondary: rgba(60, 60, 67, 0.6);
-            --label-tertiary: rgba(60, 60, 67, 0.32);
+            --separator-strong: rgba(0, 0, 0, 0.14);
+            --label-primary: #18181b;
+            --label-secondary: #71717a;
+            --label-tertiary: #a1a1aa;
             --accent: #007aff;
             --accent-hover: #0068d9;
             --accent-soft: rgba(0, 122, 255, 0.1);
@@ -59,7 +61,7 @@
             --status-onsite: #34c759;
             --status-online: #007aff;
             --status-absent: #ff3b30;
-            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.06);
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.05);
         }
 
         * {
@@ -69,16 +71,76 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: var(--bg-base);
+            background: var(--bg-base);
             color: var(--label-primary);
             margin: 0;
             padding: 0;
             display: flex;
             min-height: 100vh;
-            transition: background-color 0.25s ease, color 0.25s ease;
+            transition: background 0.25s ease, color 0.25s ease;
         }
 
-        /* Mobile Header Navigation Bar */
+        /* 3D Thunderbolt Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .bolt-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 600px;
+        }
+
+        .bolt-3d {
+            width: 64px;
+            height: 64px;
+            transform-style: preserve-3d;
+            animation: floatRotate 2s infinite ease-in-out alternate;
+            filter: drop-shadow(0 0 20px rgba(10, 132, 255, 0.8));
+        }
+
+        .bolt-3d svg {
+            width: 100%;
+            height: 100%;
+            fill: url(#thunderGradient);
+        }
+
+        .splash-title {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        @keyframes floatRotate {
+            0% { transform: rotateY(-20deg) rotateX(10deg) translateY(-4px); }
+            100% { transform: rotateY(20deg) rotateX(-10deg) translateY(4px); }
+        }
+
+        /* Mobile Header Bar */
         .mobile-header {
             display: none;
             position: fixed;
@@ -129,7 +191,7 @@
             stroke-linejoin: round;
         }
 
-        /* Sidebar Navigation Drawer */
+        /* Sidebar Navigation */
         .sidebar {
             width: 260px;
             background: var(--sidebar-bg);
@@ -150,11 +212,8 @@
         .sidebar-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             z-index: 95;
@@ -170,22 +229,56 @@
         .brand {
             padding: 0 8px 20px 8px;
             margin-bottom: 12px;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        /* 3D Sidebar Thunderbolt Widget */
+        .sidebar-bolt-widget {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-bolt-icon {
+            width: 32px;
+            height: 32px;
+            perspective: 300px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-bolt-inner {
+            width: 100%;
+            height: 100%;
+            animation: floatRotateSidebar 3s infinite ease-in-out alternate;
+            filter: drop-shadow(0 0 8px rgba(10, 132, 255, 0.6));
+        }
+
+        .sidebar-bolt-inner svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--accent);
+        }
+
+        @keyframes floatRotateSidebar {
+            0% { transform: rotateY(-15deg) translateY(-2px); }
+            100% { transform: rotateY(15deg) translateY(2px); }
         }
 
         .brand h2 {
             margin: 0;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             letter-spacing: -0.2px;
             color: var(--label-primary);
-            line-height: 1.3;
+            line-height: 1.35;
         }
 
         .brand p {
-            margin: 4px 0 0 0;
-            font-size: 12px;
-            color: var(--label-secondary);
-            font-weight: 400;
+            margin: 2px 0 0 0;
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 500;
         }
 
         .nav-menu {
@@ -241,11 +334,12 @@
             stroke: var(--accent);
         }
 
+        /* Thunderbolt Theme Toggle Button */
         .theme-toggle-btn {
             margin-top: auto;
             margin-bottom: 10px;
             background: transparent;
-            border: none;
+            border: 1px solid var(--separator);
             color: var(--label-secondary);
             padding: 8px 10px;
             border-radius: 8px;
@@ -255,12 +349,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: background-color 0.15s ease;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
 
         .theme-toggle-btn:hover {
             background: var(--bg-elevated-2);
             color: var(--label-primary);
+        }
+
+        .theme-toggle-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--accent);
+            stroke: var(--accent);
+            stroke-width: 1;
         }
 
         .pm-badge {
@@ -276,7 +378,7 @@
             font-weight: 600;
         }
 
-        /* Workspace Content Area */
+        /* Workspace Area */
         .main-content {
             margin-left: 260px;
             flex: 1;
@@ -305,7 +407,7 @@
 
         .page-header h1 {
             margin: 0;
-            font-size: 30px;
+            font-size: 28px;
             font-weight: 700;
             letter-spacing: -0.5px;
         }
@@ -316,7 +418,7 @@
             color: var(--label-secondary);
         }
 
-        /* Form Cards & Controls */
+        /* Minimal Cards */
         .card {
             background: var(--bg-elevated);
             border: 1px solid var(--separator);
@@ -348,6 +450,15 @@
             margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+        }
+
+        .field-hint {
+            font-size: 11px;
+            color: var(--label-tertiary);
+            margin-top: -4px;
+            margin-bottom: 8px;
+            text-transform: none;
+            letter-spacing: normal;
         }
 
         input[type="text"],
@@ -384,7 +495,7 @@
             line-height: 1.5;
         }
 
-        /* Attendance Register Grid */
+        /* Attendance Register */
         .attendance-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -417,7 +528,7 @@
             background: var(--bg-elevated-3);
         }
 
-        /* Member Update Cards */
+        /* Member Update Card */
         .member-update-card {
             position: relative;
             background: var(--bg-elevated-2);
@@ -513,7 +624,7 @@
             margin-bottom: 12px;
         }
 
-        /* Modal Overlay & Security Dialog */
+        /* Password Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -582,7 +693,7 @@
             display: none;
         }
 
-        /* Log History Items */
+        /* History Logs */
         .log-item {
             padding: 14px 0;
             border-bottom: 1px solid var(--separator);
@@ -626,7 +737,7 @@
         .p-medium { background: var(--orange-soft); color: var(--orange); }
         .p-low { background: var(--green-soft); color: var(--green); }
 
-        /* Media Queries for Mobile Responsiveness */
+        /* Media Queries */
         @media screen and (max-width: 768px) {
             .mobile-header {
                 display: flex;
@@ -634,7 +745,6 @@
 
             .sidebar {
                 transform: translateX(-100%);
-                box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
             }
 
             .sidebar.active {
@@ -661,7 +771,6 @@
 
             .card {
                 padding: 18px 16px;
-                border-radius: 14px;
             }
 
             .actions-group {
@@ -676,7 +785,25 @@
 </head>
 <body>
 
-<!-- Mobile Sticky Top Header -->
+<!-- 3D Thunderbolt Splash Screen -->
+<div class="splash-screen" id="splashScreen">
+    <div class="bolt-container">
+        <div class="bolt-3d">
+            <svg viewBox="0 0 24 24">
+                <defs>
+                    <linearGradient id="thunderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0a84ff" />
+                        <stop offset="100%" stop-color="#30d158" />
+                    </linearGradient>
+                </defs>
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+        </div>
+    </div>
+    <div class="splash-title">Sahansa Suite</div>
+</div>
+
+<!-- Mobile Header Bar -->
 <div class="mobile-header">
     <h2>Sahansa The PM's Suite</h2>
     <button class="menu-toggle-btn" onclick="toggleMobileMenu()" aria-label="Toggle Navigation">
@@ -684,14 +811,25 @@
     </button>
 </div>
 
-<!-- Backdrop Overlay for Mobile Drawer -->
+<!-- Mobile Drawer Backdrop Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileMenu()"></div>
 
 <!-- Sidebar Navigation -->
 <aside class="sidebar" id="sidebar">
     <div class="brand">
-        <h2>Sahansa The PM's Management Suite</h2>
-        <p>Project Workspace</p>
+        <div class="sidebar-bolt-widget">
+            <div class="sidebar-bolt-icon">
+                <div class="sidebar-bolt-inner">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                </div>
+            </div>
+            <div>
+                <h2>Sahansa The PM's Suite</h2>
+                <p>Project Workspace</p>
+            </div>
+        </div>
     </div>
 
     <ul class="nav-menu">
@@ -711,7 +849,7 @@
 
     <button class="theme-toggle-btn" onclick="toggleTheme()">
         <span id="themeLabel">Dark Mode</span>
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
     </button>
 
     <div class="pm-badge">
@@ -777,8 +915,9 @@
                     <input type="text" id="momTitle" placeholder="e.g. Sprint Review / Architecture Discussion">
                 </div>
                 <div>
-                    <label>Attendees</label>
-                    <input type="text" id="momAttendees" placeholder="e.g. Sahansa, Rajitha, Vinul">
+                    <label>Attendees & Parties</label>
+                    <div class="field-hint">Group by company/party using "|" (e.g., AASL: Nuwan, Kulara | CL: Rajitha, Sahansa)</div>
+                    <input type="text" id="momAttendees" placeholder="e.g. AASL: Nuwan, Kulara | CL: Rajitha, Sahansa">
                 </div>
             </div>
 
@@ -882,6 +1021,11 @@
     const updateMembers = teamMembers.filter(member => member !== "Sahansa");
 
     document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            const splash = document.getElementById('splashScreen');
+            if (splash) splash.classList.add('fade-out');
+        }, 1200);
+
         const now = new Date();
         document.getElementById('reportDate').value = now.toISOString().split('T')[0];
         document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
@@ -894,7 +1038,7 @@
         loadLogs();
     });
 
-    /* Mobile Drawer Toggle Functions */
+    /* Mobile Drawer Controls */
     function toggleMobileMenu() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -917,7 +1061,7 @@
         document.getElementById('themeLabel').innerText = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
     }
 
-    /* Tab Switcher */
+    /* Tab Navigation */
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -1053,7 +1197,7 @@
         }
     }
 
-    /* MOM Storage */
+    /* MOM Local Storage */
     function saveMOM() {
         const title = document.getElementById('momTitle').value || "Meeting Minutes";
         const attendees = document.getElementById('momAttendees').value || "All Members";
@@ -1072,7 +1216,7 @@
         loadLogs();
     }
 
-    /* Notes Storage */
+    /* Notes Local Storage */
     function saveNote() {
         const title = document.getElementById('noteTitle').value || "Untitled Note";
         const priority = document.getElementById('notePriority').value;
@@ -1090,7 +1234,6 @@
     }
 
     function loadLogs() {
-        // MOM Logs
         const momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
         document.getElementById('momLog').innerHTML = momLogs.length ? momLogs.map(m => `
             <div class="log-item">
@@ -1102,7 +1245,6 @@
             </div>
         `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No meeting minutes saved yet.</p>';
 
-        // Notes Logs
         const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
         document.getElementById('notesLog').innerHTML = notesLogs.length ? notesLogs.map(n => `
             <div class="log-item">
@@ -1113,7 +1255,7 @@
         `).join('') : '<p style="color: var(--label-tertiary); font-size: 13px;">No active reminders created.</p>';
     }
 
-    /* Password Modal */
+    /* Security Password Verification */
     function openPasswordModal(type) {
         activePdfType = type;
         document.getElementById('pdfPassword').value = '';
@@ -1300,17 +1442,20 @@
         doc.save(`Standup_Report_${reportDate}.pdf`);
     }
 
-    /* Meeting Minutes PDF Generator */
+    /* Meeting Minutes PDF Generator with Grouped Parties */
     function generateMOMPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
         const title = document.getElementById('momTitle').value || "Meeting Minutes";
-        const attendees = document.getElementById('momAttendees').value || "All Members";
+        const rawAttendees = document.getElementById('momAttendees').value || "All Members";
         const date = document.getElementById('momDate').value || new Date().toISOString().split('T')[0];
         const time = document.getElementById('momTime').value || "N/A";
         const discussions = document.getElementById('momDiscussions').value || "None recorded.";
         const actions = document.getElementById('momActions').value || "None recorded.";
+
+        // Split multi-party attendees by "|" separator or commas
+        const parties = rawAttendees.split('|').map(p => p.trim()).filter(Boolean);
 
         let y = 20;
 
@@ -1334,8 +1479,9 @@
 
         y = 52;
 
+        const attendeesBoxHeight = 16 + (parties.length * 5);
         doc.setFillColor(242, 242, 247);
-        doc.roundedRect(16, y, 178, 22, 2, 2, "F");
+        doc.roundedRect(16, y, 178, attendeesBoxHeight, 2, 2, "F");
 
         doc.setFontSize(9);
         doc.setTextColor(108, 108, 112);
@@ -1347,19 +1493,28 @@
 
         doc.setFont("helvetica", "bold");
         doc.setTextColor(108, 108, 112);
-        doc.text("ATTENDEES:", 22, y + 16);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(28, 28, 30);
-        doc.text(attendees, 45, y + 16);
-
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(108, 108, 112);
         doc.text("DATE & TIME:", 120, y + 8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(28, 28, 30);
         doc.text(`${date} @ ${time}`, 145, y + 8);
 
-        y += 32;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(108, 108, 112);
+        doc.text("ATTENDEES:", 22, y + 16);
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(28, 28, 30);
+        let partyY = y + 16;
+        parties.forEach((party, index) => {
+            if (index === 0) {
+                doc.text(party, 46, partyY);
+            } else {
+                partyY += 5;
+                doc.text(party, 46, partyY);
+            }
+        });
+
+        y += attendeesBoxHeight + 10;
 
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
