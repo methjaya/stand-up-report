@@ -1,1295 +1,146 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sahansa The PM's Management Suite</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='glossyBlue' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2382cfff'/><stop offset='45%25' stop-color='%230a84ff'/><stop offset='100%25' stop-color='%230040b3'/></linearGradient></defs><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z' fill='url(%23glossyBlue)'/></svg>">
-    <!-- jsPDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        :root[data-theme="dark"] {
-            --bg-base: #000000;
-            --bg-surface: rgba(18, 18, 20, 0.85);
-            --bg-elevated: #18181b;
-            --bg-elevated-2: #27272a;
-            --bg-elevated-3: #3f3f46;
-            --sidebar-bg: rgba(12, 12, 14, 0.95);
-            --mobile-header-bg: rgba(12, 12, 14, 0.92);
-            --separator: rgba(255, 255, 255, 0.08);
-            --separator-strong: rgba(255, 255, 255, 0.16);
-            --label-primary: #f4f4f5;
-            --label-secondary: #a1a1aa;
-            --label-tertiary: #71717a;
-            --accent: #0a84ff;
-            --accent-hover: #3396ff;
-            --accent-soft: rgba(10, 132, 255, 0.12);
-            --green: #30d158;
-            --green-soft: rgba(48, 209, 88, 0.12);
-            --orange: #ff9f0a;
-            --orange-soft: rgba(255, 159, 10, 0.12);
-            --red: #ff453a;
-            --red-soft: rgba(255, 69, 58, 0.12);
-            --status-onsite: #30d158;
-            --status-online: #0a84ff;
-            --status-absent: #ff453a;
-            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
+/* Meeting Minutes PDF Generator (Fixed Overflow & Page Breaks) */
+function generateMOMPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-        :root[data-theme="light"] {
-            --bg-base: #f4f4f5;
-            --bg-surface: rgba(255, 255, 255, 0.92);
-            --bg-elevated: #ffffff;
-            --bg-elevated-2: #f4f4f5;
-            --bg-elevated-3: #e4e4e7;
-            --sidebar-bg: rgba(250, 250, 250, 0.95);
-            --mobile-header-bg: rgba(250, 250, 250, 0.92);
-            --separator: rgba(0, 0, 0, 0.08);
-            --separator-strong: rgba(0, 0, 0, 0.14);
-            --label-primary: #18181b;
-            --label-secondary: #71717a;
-            --label-tertiary: #a1a1aa;
-            --accent: #007aff;
-            --accent-hover: #0068d9;
-            --accent-soft: rgba(0, 122, 255, 0.1);
-            --green: #34c759;
-            --green-soft: rgba(52, 199, 89, 0.1);
-            --orange: #ff9500;
-            --orange-soft: rgba(255, 149, 0, 0.1);
-            --red: #ff3b30;
-            --red-soft: rgba(255, 59, 48, 0.1);
-            --status-onsite: #34c759;
-            --status-online: #007aff;
-            --status-absent: #ff3b30;
-            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.05);
-        }
+    const title = activePdfData ? activePdfData.title : (document.getElementById('momTitle').value || "Meeting Minutes");
+    const rawAttendees = activePdfData ? activePdfData.attendees : (document.getElementById('momAttendees').value || "All Members");
+    const date = activePdfData ? activePdfData.date : (document.getElementById('momDate').value || new Date().toISOString().split('T')[0]);
+    const time = activePdfData ? activePdfData.time : (document.getElementById('momTime').value || "N/A");
+    const discussions = activePdfData ? activePdfData.discussions : (document.getElementById('momDiscussions').value || "None recorded.");
+    const actions = activePdfData ? activePdfData.actions : (document.getElementById('momActions').value || "None recorded.");
 
-        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-        html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+    let y = 20;
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background: var(--bg-base);
-            color: var(--label-primary);
-            margin: 0; padding: 0;
-            display: flex; min-height: 100vh;
-            transition: background 0.25s ease, color 0.25s ease;
-        }
+    // Header Banner
+    doc.setFillColor(28, 28, 30);
+    doc.rect(0, 0, 210, 42, "F");
 
-        /* Mobile Header */
-        .mobile-header {
-            display: none;
-            position: fixed; top: 0; left: 0; right: 0; height: 56px;
-            background: var(--mobile-header-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--separator); padding: 0 16px;
-            align-items: center; justify-content: space-between; z-index: 900;
-        }
-        .mobile-header h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--label-primary); }
-        .menu-toggle-btn {
-            background: var(--bg-elevated-2); border: 1px solid var(--separator); color: var(--label-primary);
-            width: 38px; height: 38px; border-radius: 8px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .menu-toggle-btn svg { width: 20px; height: 20px; stroke: var(--label-primary); fill: none; stroke-width: 2; }
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text("MEETING MINUTES (MOM)", 16, y);
 
-        /* Sidebar Navigation Drawer */
-        .sidebar {
-            width: 260px; background: var(--sidebar-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border-right: 1px solid var(--separator); padding: 28px 16px; display: flex; flex-direction: column;
-            position: fixed; top: 0; bottom: 0; left: 0; z-index: 1000;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .sidebar-overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-            z-index: 950; opacity: 0; transition: opacity 0.25s ease;
-        }
-        .sidebar-overlay.active { display: block; opacity: 1; }
+    doc.setFontSize(11);
+    doc.setTextColor(142, 142, 147);
+    doc.setFont("helvetica", "normal");
+    doc.text("Sahansa The PM's Management Suite", 16, y + 7);
 
-        .brand { padding: 0 8px 20px 8px; margin-bottom: 12px; border-bottom: 1px solid var(--separator); }
-        .sidebar-bolt-widget { display: flex; align-items: center; gap: 12px; }
-        .sidebar-bolt-icon { width: 32px; height: 32px; flex-shrink: 0; }
-        .sidebar-bolt-icon svg { width: 100%; height: 100%; fill: var(--accent); }
-        .brand h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--label-primary); }
-        .brand p { margin: 2px 0 0 0; font-size: 11px; color: var(--accent); font-weight: 500; }
+    y = 52;
 
-        .nav-menu { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
-        .nav-item {
-            display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px;
-            font-size: 14px; font-weight: 500; color: var(--label-secondary); cursor: pointer; transition: all 0.15s ease;
-        }
-        .nav-item svg { width: 17px; height: 17px; stroke: var(--label-secondary); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-        .nav-item:hover { background: var(--bg-elevated-2); color: var(--label-primary); }
-        .nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-        .nav-item.active svg { stroke: var(--accent); }
-
-        .sidebar-bottom-actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
-        .theme-toggle-btn {
-            background: transparent; border: 1px solid var(--separator);
-            color: var(--label-secondary); padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: 500;
-            cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%;
-        }
-        .theme-toggle-btn:hover { background: var(--bg-elevated-2); color: var(--label-primary); }
-        .theme-toggle-btn svg { width: 16px; height: 16px; fill: var(--accent); stroke: var(--accent); }
-
-        .pm-badge { padding: 10px; font-size: 12px; color: var(--label-secondary); border-top: 1px solid var(--separator); margin-top: 4px; }
-        .pm-badge strong { display: block; color: var(--label-primary); font-size: 13px; font-weight: 600; }
-
-        /* Content Layout */
-        .main-content {
-            margin-left: 260px; flex: 1; padding: 48px 56px; max-width: 1000px; width: 100%; min-width: 0;
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: appleFadeIn 0.2s ease; }
-
-        @keyframes appleFadeIn {
-            from { opacity: 0; transform: translateY(3px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .page-header { margin-bottom: 28px; }
-        .page-header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-        .page-header p { margin: 6px 0 0 0; font-size: 14px; color: var(--label-secondary); }
-
-        .card {
-            background: var(--bg-elevated); border: 1px solid var(--separator); border-radius: 16px;
-            padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow-card);
-        }
-        .form-group { margin-bottom: 20px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-        label { display: block; font-size: 12px; font-weight: 600; color: var(--label-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
-        .field-hint { font-size: 11px; color: var(--label-tertiary); margin-top: -4px; margin-bottom: 8px; }
-
-        input[type="text"], input[type="date"], input[type="time"], input[type="password"], select, textarea {
-            width: 100%; min-height: 42px; padding: 10px 12px; background-color: var(--bg-elevated-2);
-            border: 1px solid var(--separator); color: var(--label-primary); border-radius: 9px;
-            font-family: inherit; font-size: 14px; box-sizing: border-box;
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
-
-        /* Attendance Register */
-        .attendance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .attendance-row {
-            display: flex; align-items: center; justify-content: space-between; gap: 8px;
-            background: var(--bg-elevated-2); padding: 10px 12px; border-radius: 9px; border: 1px solid var(--separator);
-        }
-        .attendance-row label { margin-bottom: 0; color: var(--label-primary); font-size: 14px; text-transform: none; }
-        .attendance-row select { width: auto; max-width: 120px; padding: 5px 8px; font-size: 13px; background: var(--bg-elevated-3); min-height: 36px; }
-
-        /* Member Card */
-        .member-update-card { position: relative; background: var(--bg-elevated-2); border: 1px solid var(--separator); padding: 16px; margin-bottom: 12px; border-radius: 12px; }
-        .card-header-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .card-header-flex h4 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 600; }
-        .card-header-flex h4::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background-color: var(--status-onsite); }
-        .member-update-card[data-status="On-site"] h4::before { background-color: var(--status-onsite); }
-        .member-update-card[data-status="Online"] h4::before { background-color: var(--status-online); }
-        .member-update-card[data-status="Absent"] h4::before { background-color: var(--status-absent); }
-        .status-pill { font-size: 11px; font-weight: 600; color: var(--label-tertiary); }
-
-        /* Actions */
-        .actions-group { display: flex; gap: 10px; margin-top: 24px; }
-        button.btn-primary {
-            flex: 2; background-color: var(--accent); color: #ffffff; border: none; padding: 12px 18px;
-            font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; min-height: 44px;
-        }
-        button.btn-primary:hover { background-color: var(--accent-hover); }
-        button.btn-secondary {
-            flex: 1; background-color: var(--bg-elevated-2); color: var(--red); border: 1px solid var(--separator);
-            padding: 12px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; min-height: 44px;
-        }
-        button.btn-secondary:hover { background-color: var(--red-soft); }
-        .draft-status { font-size: 12px; color: var(--label-tertiary); text-align: right; margin-bottom: 12px; }
-
-        /* Modals */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 2000;
-            justify-content: center; align-items: center; padding: 16px;
-        }
-        .modal-card {
-            width: 100%; max-width: 340px; background: var(--bg-elevated); border: 1px solid var(--separator);
-            border-radius: 16px; padding: 24px; text-align: center; box-shadow: var(--shadow-card);
-        }
-        .modal-card h3 { margin: 0 0 4px 0; font-size: 16px; font-weight: 600; }
-        .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
-        .btn-modal { flex: 1; padding: 12px; border-radius: 9px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 42px; }
-        .btn-modal-cancel { background-color: var(--bg-elevated-2); color: var(--label-primary); border: 1px solid var(--separator); }
-        .btn-modal-submit { background-color: var(--accent); color: white; }
-        .error-msg { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
-
-        /* Logs */
-        .log-item { padding: 16px; background: var(--bg-elevated-2); border: 1px solid var(--separator); border-radius: 12px; margin-bottom: 14px; }
-        .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
-        .log-item h5 { margin: 0; font-size: 15px; font-weight: 600; color: var(--label-primary); }
-        .log-details-block { font-size: 13px; color: var(--label-secondary); line-height: 1.5; margin-top: 8px; background: var(--bg-elevated); padding: 12px; border-radius: 8px; border: 1px solid var(--separator); }
-        .log-item-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .btn-log-action { background: var(--bg-elevated-3); border: 1px solid var(--separator); color: var(--label-primary); padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; min-height: 36px; }
-        .btn-log-action:hover { background: var(--separator-strong); }
-        .btn-log-action.danger { color: var(--red); }
-        .btn-log-action.danger:hover { background: var(--red-soft); }
-        .btn-log-action.success { color: var(--green); }
-        .btn-log-action.success:hover { background: var(--green-soft); }
-
-        .stats-pill-container { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
-        .micro-pill { font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
-        .pill-onsite { background: var(--green-soft); color: var(--green); }
-        .pill-online { background: var(--accent-soft); color: var(--accent); }
-        .pill-absent { background: var(--red-soft); color: var(--red); }
-
-        .meta-tag { display: inline-block; font-size: 11px; color: var(--label-tertiary); }
-        .badge-priority { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; margin-left: 8px; }
-        .p-high { background: var(--red-soft); color: var(--red); }
-        .p-medium { background: var(--orange-soft); color: var(--orange); }
-        .p-low { background: var(--green-soft); color: var(--green); }
-
-        @media screen and (max-width: 768px) {
-            .mobile-header { display: flex; }
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .main-content { margin-left: 0; padding: 72px 14px 32px 14px; max-width: 100vw; }
-            .grid-2, .attendance-grid { grid-template-columns: 1fr; }
-            .actions-group { flex-direction: column-reverse; gap: 8px; }
-            button.btn-primary, button.btn-secondary { width: 100%; }
-        }
-    </style>
-</head>
-<body>
-
-<!-- Mobile Header Bar -->
-<div class="mobile-header">
-    <h2>Sahansa The PM's Suite</h2>
-    <button class="menu-toggle-btn" onclick="toggleMobileMenu()" aria-label="Toggle Navigation">
-        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-</div>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileMenu()"></div>
-
-<!-- Sidebar Navigation -->
-<aside class="sidebar" id="sidebar">
-    <div class="brand">
-        <div class="sidebar-bolt-widget">
-            <div class="sidebar-bolt-icon">
-                <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            </div>
-            <div>
-                <h2>Sahansa Suite</h2>
-                <p>Project Workspace</p>
-            </div>
-        </div>
-    </div>
-
-    <ul class="nav-menu">
-        <li class="nav-item active" id="nav_standup" onclick="switchTab('standup')">
-            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            Stand-Up Report
-        </li>
-        <li class="nav-item" id="nav_mom" onclick="switchTab('mom')">
-            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Meeting Minutes
-        </li>
-        <li class="nav-item" id="nav_notes" onclick="switchTab('notes')">
-            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Notes & Reminders
-        </li>
-        <li class="nav-item" id="nav_history" onclick="switchTab('history')">
-            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            History & Records
-        </li>
-        <li class="nav-item" id="nav_recycle" onclick="openRecycleBinWithAuth()">
-            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Recycle Bin
-        </li>
-    </ul>
-
-    <div class="sidebar-bottom-actions">
-        <button class="theme-toggle-btn" onclick="toggleTheme()">
-            <span id="themeLabel">Dark Mode</span>
-            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        </button>
-    </div>
-
-    <div class="pm-badge">
-        <strong>Sahansa</strong>
-        <span>Project Manager</span>
-    </div>
-</aside>
-
-<!-- Main Workspace -->
-<main class="main-content">
-
-    <!-- 1. STAND-UP REPORT TAB -->
-    <section id="tab-standup" class="tab-content active">
-        <div class="page-header">
-            <h1>Daily Stand-Up Report</h1>
-            <p>Track team attendance and member status.</p>
-        </div>
-
-        <div class="draft-status" id="draftStatus">Draft state: Unsaved</div>
-
-        <div class="card">
-            <form id="standupForm">
-                <div class="grid-2 form-group">
-                    <div>
-                        <label for="reportDate">Date</label>
-                        <input type="date" id="reportDate" onchange="saveDraft()" required>
-                    </div>
-                    <div>
-                        <label for="reportTime">Time</label>
-                        <input type="time" id="reportTime" onchange="saveDraft()" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Attendance Register</label>
-                    <div class="attendance-grid" id="attendanceGrid"></div>
-                </div>
-
-                <div class="form-group" style="margin-top: 24px;">
-                    <label>Member Updates</label>
-                    <div id="updatesList"></div>
-                </div>
-
-                <div class="actions-group">
-                    <button type="button" class="btn-secondary" onclick="clearDraft()">Reset Draft</button>
-                    <button type="button" class="btn-primary" onclick="saveStandupAndModal()">Save & Generate PDF</button>
-                </div>
-            </form>
-        </div>
-    </section>
-
-    <!-- 2. MEETING MINUTES (MOM) TAB -->
-    <section id="tab-mom" class="tab-content">
-        <div class="page-header">
-            <h1>Meeting Minutes (MOM)</h1>
-            <p>Log decisions, discussions, and action items with exportable PDF summaries.</p>
-        </div>
-
-        <div class="card">
-            <div class="form-group grid-2">
-                <div>
-                    <label>Meeting Title</label>
-                    <input type="text" id="momTitle" placeholder="Enter meeting title">
-                </div>
-                <div>
-                    <label>Attendees & Parties</label>
-                    <div class="field-hint">Group by party using "|"</div>
-                    <input type="text" id="momAttendees" placeholder="Enter attendees list">
-                </div>
-            </div>
-
-            <div class="form-group grid-2">
-                <div>
-                    <label>Date</label>
-                    <input type="date" id="momDate">
-                </div>
-                <div>
-                    <label>Time</label>
-                    <input type="time" id="momTime">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Key Discussions & Decisions</label>
-                <textarea id="momDiscussions" placeholder="Enter key meeting discussions..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Action Items & Responsibilities</label>
-                <textarea id="momActions" placeholder="Enter action items and assigned members..."></textarea>
-            </div>
-
-            <div class="actions-group">
-                <button type="button" class="btn-secondary" onclick="saveMOM()">Save Local Entry</button>
-                <button type="button" class="btn-primary" onclick="openPasswordModal('mom')">Generate MOM PDF</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. SPECIAL NOTES & REMINDERS TAB -->
-    <section id="tab-notes" class="tab-content">
-        <div class="page-header">
-            <h1>Special Notes & Reminders</h1>
-            <p>Record critical notes, priorities, and PM milestones.</p>
-        </div>
-
-        <div class="card">
-            <div class="form-group grid-2">
-                <div>
-                    <label>Title / Headline</label>
-                    <input type="text" id="noteTitle" placeholder="Enter title">
-                </div>
-                <div>
-                    <label>Priority Level</label>
-                    <select id="notePriority">
-                        <option value="High">High Priority</option>
-                        <option value="Medium" selected>Medium Priority</option>
-                        <option value="Low">Low Priority</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Note Description / Details</label>
-                <textarea id="noteContent" placeholder="Enter note details..."></textarea>
-            </div>
-
-            <button type="button" class="btn-primary" onclick="saveNote()">Add Reminder Note</button>
-        </div>
-    </section>
-
-    <!-- 4. HISTORY & SAVED RECORDS TAB -->
-    <section id="tab-history" class="tab-content">
-        <div class="page-header">
-            <h1>History & Saved Records</h1>
-            <p>Review, re-download PDFs, edit, or soft-delete previously saved records.</p>
-        </div>
-
-        <div class="card">
-            <h3>Saved Stand-Up Reports</h3>
-            <div id="standupHistoryLog"></div>
-        </div>
-
-        <div class="card">
-            <h3>Saved Meeting Minutes (MOM)</h3>
-            <div id="momLog"></div>
-        </div>
-
-        <div class="card">
-            <h3>Active Reminders & Notes</h3>
-            <div id="notesLog"></div>
-        </div>
-    </section>
-
-    <!-- 5. RECYCLE BIN TAB -->
-    <section id="tab-recycle" class="tab-content">
-        <div class="page-header">
-            <h1>Recycle Bin (Soft Deleted Items)</h1>
-            <p>Restore accidentally deleted items or permanently purge them.</p>
-        </div>
-
-        <div class="card">
-            <h3>Deleted Stand-Up Reports</h3>
-            <div id="recycleStandupLog"></div>
-        </div>
-
-        <div class="card">
-            <h3>Deleted Meeting Minutes</h3>
-            <div id="recycleMomLog"></div>
-        </div>
-
-        <div class="card">
-            <h3>Deleted Notes</h3>
-            <div id="recycleNotesLog"></div>
-        </div>
-    </section>
-
-</main>
-
-<!-- Security Verification Modal -->
-<div class="modal-overlay" id="passwordModal">
-    <div class="modal-card">
-        <h3>Security Verification</h3>
-        <p style="font-size: 13px; color: var(--label-secondary);" id="modalPromptText">Enter password to proceed.</p>
-        <input type="password" id="pdfPassword" placeholder="Enter Password" onkeyup="checkEnterKey(event)">
-        <div class="error-msg" id="passwordError">Incorrect password. Please try again.</div>
-        <div class="modal-actions">
-            <button type="button" class="btn-modal btn-modal-cancel" onclick="closePasswordModal()">Cancel</button>
-            <button type="button" class="btn-modal btn-modal-submit" onclick="verifyAndDownload()">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Master Security Passwords
-    const DEFAULT_MASTER_PASSWORD = "2522";
-    const DRAFT_KEY = "sahansa_pm_standup_draft";
-
-    let activePdfType = "standup";
-    let activePdfData = null;
-    let isRecycleUnlocked = false;
-
-    const teamMembers = [
-        "Rajitha", "Vinul", "Navodya", "Sahansa", 
-        "Vishwa", "Isuri", "Kumuditha", "Nufail", 
-        "Ruth", "Chamikara", "Pubba", "Ama"
-    ];
-
-    const updateMembers = teamMembers.filter(member => member !== "Sahansa");
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const now = new Date();
-        document.getElementById('reportDate').value = now.toISOString().split('T')[0];
-        document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
-        document.getElementById('momDate').value = now.toISOString().split('T')[0];
-        document.getElementById('momTime').value = now.toTimeString().slice(0, 5);
-
-        renderAttendance();
-        renderUpdateInputs();
-        loadDraft();
-        loadLogs();
+    // --- ATTENDEES & METADATA BLOCK ---
+    const parties = rawAttendees.split('|').map(p => p.trim()).filter(Boolean);
+    let wrappedPartiesText = [];
+    
+    parties.forEach(p => {
+        const splitP = doc.splitTextToSize(p, 130);
+        wrappedPartiesText = wrappedPartiesText.concat(splitP);
     });
 
-    /* Navigation Controls */
-    function toggleMobileMenu() {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('sidebarOverlay').classList.toggle('active');
-    }
-
-    function closeMobileMenu() {
-        document.getElementById('sidebar').classList.remove('active');
-        document.getElementById('sidebarOverlay').classList.remove('active');
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        document.getElementById('themeLabel').innerText = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
-    }
-
-    function switchTab(tabId) {
-        if (tabId !== 'recycle') {
-            isRecycleUnlocked = false;
-        }
-
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        
-        const tabMap = { 'standup': 0, 'mom': 1, 'notes': 2, 'history': 3, 'recycle': 4 };
-        if (document.querySelectorAll('.nav-item')[tabMap[tabId]]) {
-            document.querySelectorAll('.nav-item')[tabMap[tabId]].classList.add('active');
-        }
-
-        if (tabId === 'history' || tabId === 'recycle') loadLogs();
-        closeMobileMenu();
-    }
-
-    function openRecycleBinWithAuth() {
-        if (isRecycleUnlocked) {
-            switchTab('recycle');
-        } else {
-            openPasswordModal('unlock_recycle');
-        }
-    }
-
-    /* Attendance & Input Rendering */
-    function renderAttendance() {
-        const grid = document.getElementById('attendanceGrid');
-        grid.innerHTML = '';
-        teamMembers.forEach((member) => {
-            const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            grid.innerHTML += `
-                <div class="attendance-row">
-                    <label for="att_status_${memberId}">${member}</label>
-                    <select id="att_status_${memberId}" onchange="updateMemberCardStatus('${member}'); saveDraft();">
-                        <option value="On-site">On-Site</option>
-                        <option value="Online">Joined Online</option>
-                        <option value="Absent">Absent</option>
-                    </select>
-                </div>
-            `;
-        });
-    }
-
-    function renderUpdateInputs() {
-        const updatesListEl = document.getElementById('updatesList');
-        updatesListEl.innerHTML = '';
-        updateMembers.forEach((member) => {
-            const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            updatesListEl.innerHTML += `
-                <div class="member-update-card" id="card_${memberId}" data-status="On-site">
-                    <div class="card-header-flex">
-                        <h4>${member}</h4>
-                        <span class="status-pill" id="pill_${memberId}">On-site</span>
-                    </div>
-                    <textarea id="update_${memberId}" placeholder="Enter daily update for ${member}..." oninput="saveDraft()"></textarea>
-                </div>
-            `;
-        });
-    }
-
-    function updateMemberCardStatus(member) {
-        if (member === "Sahansa") return;
-        const memberId = member.toLowerCase().replace(/\s+/g, '_');
-        const statusSelect = document.getElementById(`att_status_${memberId}`);
-        const card = document.getElementById(`card_${memberId}`);
-        const pill = document.getElementById(`pill_${memberId}`);
-
-        if (statusSelect && card && pill) {
-            const status = statusSelect.value;
-            card.setAttribute('data-status', status);
-            pill.innerText = status === 'Online' ? 'Joined Online' : status;
-        }
-    }
-
-    /* Drafts & Storage */
-    function saveDraft() {
-        const draftData = {
-            reportDate: document.getElementById('reportDate').value,
-            reportTime: document.getElementById('reportTime').value,
-            attendance: {}, updates: {}
-        };
-
-        teamMembers.forEach((member) => {
-            const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            const statusEl = document.getElementById(`att_status_${memberId}`);
-            if (statusEl) draftData.attendance[member] = statusEl.value;
-        });
-
-        updateMembers.forEach((member) => {
-            const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            const textarea = document.getElementById(`update_${memberId}`);
-            if (textarea) draftData.updates[member] = textarea.value;
-        });
-
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
-        document.getElementById('draftStatus').innerText = `Auto-saved draft at ${new Date().toLocaleTimeString()}`;
-    }
-
-    function loadDraft() {
-        const savedData = localStorage.getItem(DRAFT_KEY);
-        if (!savedData) return;
-        try {
-            const draftData = JSON.parse(savedData);
-            if (draftData.reportDate) document.getElementById('reportDate').value = draftData.reportDate;
-            if (draftData.reportTime) document.getElementById('reportTime').value = draftData.reportTime;
-
-            if (draftData.attendance) {
-                teamMembers.forEach((member) => {
-                    const memberId = member.toLowerCase().replace(/\s+/g, '_');
-                    const statusEl = document.getElementById(`att_status_${memberId}`);
-                    if (statusEl && draftData.attendance[member]) {
-                        statusEl.value = draftData.attendance[member];
-                        updateMemberCardStatus(member);
-                    }
-                });
-            }
-
-            if (draftData.updates) {
-                updateMembers.forEach((member) => {
-                    const memberId = member.toLowerCase().replace(/\s+/g, '_');
-                    const textarea = document.getElementById(`update_${memberId}`);
-                    if (textarea && draftData.updates[member] !== undefined) {
-                        textarea.value = draftData.updates[member];
-                    }
-                });
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    function clearDraft() {
-        if (confirm("Are you sure you want to clear all form fields?")) {
-            localStorage.removeItem(DRAFT_KEY);
-            document.getElementById('standupForm').reset();
-            const now = new Date();
-            document.getElementById('reportDate').value = now.toISOString().split('T')[0];
-            document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
-            teamMembers.forEach(member => updateMemberCardStatus(member));
-            document.getElementById('draftStatus').innerText = "Draft cleared";
-        }
-    }
-
-    /* Save Logic */
-    function saveStandupAndModal() {
-        const reportDate = document.getElementById('reportDate').value;
-        const reportTime = document.getElementById('reportTime').value;
-
-        const attendance = {}; const updates = {};
-        teamMembers.forEach(m => {
-            const memberId = m.toLowerCase().replace(/\s+/g, '_');
-            const el = document.getElementById(`att_status_${memberId}`);
-            if (el) attendance[m] = el.value;
-        });
-        updateMembers.forEach(m => {
-            const memberId = m.toLowerCase().replace(/\s+/g, '_');
-            const el = document.getElementById(`update_${memberId}`);
-            if (el) updates[m] = el.value;
-        });
-
-        const id = Date.now();
-        const record = { id, date: reportDate, time: reportTime, attendance, updates, author: "Sahansa (PM)", soft_deleted: false };
-
-        const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
-        logs.unshift(record);
-        localStorage.setItem('standup_logs', JSON.stringify(logs));
-
-        activePdfData = record;
-        loadLogs();
-        openPasswordModal('standup');
-    }
-
-    function saveMOM() {
-        const title = document.getElementById('momTitle').value || "Meeting Minutes";
-        const attendees = document.getElementById('momAttendees').value || "All Members";
-        const date = document.getElementById('momDate').value || new Date().toISOString().split('T')[0];
-        const time = document.getElementById('momTime').value || "10:00 AM";
-        const discussions = document.getElementById('momDiscussions').value;
-        const actions = document.getElementById('momActions').value;
-
-        if (!discussions) return alert("Please enter key discussions.");
-
-        const id = Date.now();
-        const record = { id, title, attendees, date, time, discussions, actions, author: "Sahansa (PM)", soft_deleted: false };
-
-        const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
-        logs.unshift(record);
-        localStorage.setItem('mom_logs', JSON.stringify(logs));
-
-        alert("Meeting Minutes saved successfully!");
-        loadLogs();
-    }
-
-    function saveNote() {
-        const title = document.getElementById('noteTitle').value || "Untitled Note";
-        const priority = document.getElementById('notePriority').value;
-        const content = document.getElementById('noteContent').value;
-
-        if (!content) return alert("Please enter note description.");
-
-        const id = Date.now();
-        const logs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
-        logs.unshift({ id, title, priority, content, date: new Date().toLocaleDateString(), author: "Sahansa (PM)", soft_deleted: false });
-        localStorage.setItem('notes_logs', JSON.stringify(logs));
-
-        document.getElementById('noteTitle').value = '';
-        document.getElementById('noteContent').value = '';
-        alert("Reminder note saved successfully!");
-        loadLogs();
-    }
-
-    /* History & Recycle Logs Renderers */
-    function loadLogs() {
-        const standupLogs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
-        document.getElementById('standupHistoryLog').innerHTML = renderStandupLogHTML(standupLogs.filter(s => !s.soft_deleted), false);
-        document.getElementById('recycleStandupLog').innerHTML = renderStandupLogHTML(standupLogs.filter(s => s.soft_deleted), true);
-
-        const momLogs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
-        document.getElementById('momLog').innerHTML = renderMomLogHTML(momLogs.filter(m => !m.soft_deleted), false);
-        document.getElementById('recycleMomLog').innerHTML = renderMomLogHTML(momLogs.filter(m => m.soft_deleted), true);
-
-        const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
-        document.getElementById('notesLog').innerHTML = renderNotesLogHTML(notesLogs.filter(n => !n.soft_deleted), false);
-        document.getElementById('recycleNotesLog').innerHTML = renderNotesLogHTML(notesLogs.filter(n => n.soft_deleted), true);
-    }
-
-    function renderStandupLogHTML(list, isRecycle) {
-        if (!list.length) return `<p style="color: var(--label-tertiary); font-size: 13px;">No ${isRecycle ? 'deleted' : 'active'} records.</p>`;
-        return list.map((s) => {
-            let onsiteMembers = [], onlineMembers = [], absentMembers = [];
-            if (s.attendance) {
-                Object.entries(s.attendance).forEach(([m, val]) => {
-                    if (val === 'On-site') onsiteMembers.push(m);
-                    else if (val === 'Online') onlineMembers.push(m);
-                    else absentMembers.push(m);
-                });
-            }
-            let updatesHtml = s.updates ? Object.entries(s.updates).map(([m, text]) => `<div><strong>${m}:</strong> ${escapeHtml(text || "No update")}</div>`).join('') : "";
-
-            return `
-                <div class="log-item">
-                    <div class="log-header">
-                        <h5>Daily Stand-Up Report (${s.date})</h5>
-                        <span class="meta-tag">By: ${escapeHtml(s.author)} @ ${s.time}</span>
-                    </div>
-                    <div class="stats-pill-container">
-                        <span class="micro-pill pill-onsite">On-Site (${onsiteMembers.length}): ${onsiteMembers.join(', ') || 'None'}</span>
-                        <span class="micro-pill pill-online">Online (${onlineMembers.length}): ${onlineMembers.join(', ') || 'None'}</span>
-                        <span class="micro-pill pill-absent">Absent (${absentMembers.length}): ${absentMembers.join(', ') || 'None'}</span>
-                    </div>
-                    <div class="log-details-block"><strong>Updates:</strong>${updatesHtml}</div>
-                    <div class="log-item-actions">
-                        ${!isRecycle ? `
-                            <button class="btn-log-action" onclick="redownloadStandupPDFById(${s.id})">Re-Download PDF</button>
-                            <button class="btn-log-action" onclick="editStandupRecordById(${s.id})">Edit</button>
-                            <button class="btn-log-action danger" onclick="softDeleteRecord('standup_logs', ${s.id})">Delete</button>
-                        ` : `
-                            <button class="btn-log-action success" onclick="restoreRecord('standup_logs', ${s.id})">Restore</button>
-                            <button class="btn-log-action danger" onclick="permDeleteRecord('standup_logs', ${s.id})">Purge Permanently</button>
-                        `}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function renderMomLogHTML(list, isRecycle) {
-        if (!list.length) return `<p style="color: var(--label-tertiary); font-size: 13px;">No ${isRecycle ? 'deleted' : 'active'} records.</p>`;
-        return list.map((m) => `
-            <div class="log-item">
-                <div class="log-header">
-                    <h5>${escapeHtml(m.title)}</h5>
-                    <span class="meta-tag">By: ${escapeHtml(m.author)} | ${m.date} @ ${m.time}</span>
-                </div>
-                <p><strong>Attendees & Parties:</strong> ${escapeHtml(m.attendees)}</p>
-                <div class="log-details-block">
-                    <p><strong>Discussions:</strong> ${escapeHtml(m.discussions)}</p>
-                    <p style="margin-top:4px;"><strong>Actions:</strong> ${escapeHtml(m.actions || 'None')}</p>
-                </div>
-                <div class="log-item-actions">
-                    ${!isRecycle ? `
-                        <button class="btn-log-action" onclick="redownloadMOMPDFById(${m.id})">Re-Download PDF</button>
-                        <button class="btn-log-action" onclick="editMOMRecordById(${m.id})">Edit</button>
-                        <button class="btn-log-action danger" onclick="softDeleteRecord('mom_logs', ${m.id})">Delete</button>
-                    ` : `
-                        <button class="btn-log-action success" onclick="restoreRecord('mom_logs', ${m.id})">Restore</button>
-                        <button class="btn-log-action danger" onclick="permDeleteRecord('mom_logs', ${m.id})">Purge Permanently</button>
-                    `}
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function renderNotesLogHTML(list, isRecycle) {
-        if (!list.length) return `<p style="color: var(--label-tertiary); font-size: 13px;">No ${isRecycle ? 'deleted' : 'active'} records.</p>`;
-        return list.map((n) => `
-            <div class="log-item">
-                <div class="log-header">
-                    <h5>${escapeHtml(n.title)} <span class="badge-priority p-${n.priority.toLowerCase()}">${n.priority}</span></h5>
-                    <span class="meta-tag">By: ${escapeHtml(n.author)} | ${n.date}</span>
-                </div>
-                <div class="log-details-block">${escapeHtml(n.content)}</div>
-                <div class="log-item-actions">
-                    ${!isRecycle ? `
-                        <button class="btn-log-action" onclick="editNoteRecordById(${n.id})">Edit</button>
-                        <button class="btn-log-action danger" onclick="softDeleteRecord('notes_logs', ${n.id})">Delete</button>
-                    ` : `
-                        <button class="btn-log-action success" onclick="restoreRecord('notes_logs', ${n.id})">Restore</button>
-                        <button class="btn-log-action danger" onclick="permDeleteRecord('notes_logs', ${n.id})">Purge Permanently</button>
-                    `}
-                </div>
-            </div>
-        `).join('');
-    }
-
-    /* Soft & Hard Delete Actions */
-    function softDeleteRecord(storageKey, id) {
-        const logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        const record = logs.find(x => x.id === id);
-        if (record) {
-            record.soft_deleted = true;
-            localStorage.setItem(storageKey, JSON.stringify(logs));
-            loadLogs();
-        }
-    }
-
-    function restoreRecord(storageKey, id) {
-        const logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        const record = logs.find(x => x.id === id);
-        if (record) {
-            record.soft_deleted = false;
-            localStorage.setItem(storageKey, JSON.stringify(logs));
-            loadLogs();
-        }
-    }
-
-    function permDeleteRecord(storageKey, id) {
-        if (!confirm("Permanently delete this record? This action cannot be undone.")) return;
-        let logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        logs = logs.filter(x => x.id !== id);
-        localStorage.setItem(storageKey, JSON.stringify(logs));
-        loadLogs();
-    }
-
-    function redownloadStandupPDFById(id) {
-        const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
-        activePdfData = logs.find(x => x.id === id);
-        if (activePdfData) openPasswordModal('standup');
-    }
-
-    function redownloadMOMPDFById(id) {
-        const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
-        activePdfData = logs.find(x => x.id === id);
-        if (activePdfData) openPasswordModal('mom');
-    }
-
-    function editStandupRecordById(id) {
-        const logs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
-        const record = logs.find(x => x.id === id);
-        if (!record) return;
-
-        document.getElementById('reportDate').value = record.date;
-        document.getElementById('reportTime').value = record.time;
-
-        if (record.attendance) {
-            teamMembers.forEach(m => {
-                const memberId = m.toLowerCase().replace(/\s+/g, '_');
-                const select = document.getElementById(`att_status_${memberId}`);
-                if (select && record.attendance[m]) {
-                    select.value = record.attendance[m];
-                    updateMemberCardStatus(m);
-                }
-            });
-        }
-
-        if (record.updates) {
-            updateMembers.forEach(m => {
-                const memberId = m.toLowerCase().replace(/\s+/g, '_');
-                const textarea = document.getElementById(`update_${memberId}`);
-                if (textarea && record.updates[m]) {
-                    textarea.value = record.updates[m];
-                }
-            });
-        }
-        switchTab('standup');
-    }
-
-    function editMOMRecordById(id) {
-        const logs = JSON.parse(localStorage.getItem('mom_logs') || '[]');
-        const record = logs.find(x => x.id === id);
-        if (!record) return;
-
-        document.getElementById('momTitle').value = record.title;
-        document.getElementById('momAttendees').value = record.attendees;
-        document.getElementById('momDate').value = record.date;
-        document.getElementById('momTime').value = record.time;
-        document.getElementById('momDiscussions').value = record.discussions;
-        document.getElementById('momActions').value = record.actions;
-        switchTab('mom');
-    }
-
-    function editNoteRecordById(id) {
-        const logs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
-        const record = logs.find(x => x.id === id);
-        if (!record) return;
-
-        document.getElementById('noteTitle').value = record.title;
-        document.getElementById('notePriority').value = record.priority;
-        document.getElementById('noteContent').value = record.content;
-        switchTab('notes');
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    /* Security Modal Logic */
-    function openPasswordModal(type) {
-        activePdfType = type;
-        document.getElementById('pdfPassword').value = '';
-        document.getElementById('passwordError').style.display = 'none';
-        
-        if (type === 'unlock_recycle') {
-            document.getElementById('modalPromptText').innerText = "Enter password to access Recycle Bin.";
-        } else {
-            document.getElementById('modalPromptText').innerText = "Enter password to export document.";
-        }
-
-        document.getElementById('passwordModal').style.display = 'flex';
-        document.getElementById('pdfPassword').focus();
-    }
-
-    function closePasswordModal() {
-        document.getElementById('passwordModal').style.display = 'none';
-    }
-
-    function checkEnterKey(e) { if (e.key === 'Enter') verifyAndDownload(); }
-
-    function verifyAndDownload() {
-        const entered = document.getElementById('pdfPassword').value;
-
-        if (entered === DEFAULT_MASTER_PASSWORD) {
-            closePasswordModal();
-            if (activePdfType === 'unlock_recycle') {
-                isRecycleUnlocked = true;
-                switchTab('recycle');
-            } else if (activePdfType === 'standup') {
-                generateStandupPDF();
-            } else if (activePdfType === 'mom') {
-                generateMOMPDF();
-            }
-        } else {
-            document.getElementById('passwordError').style.display = 'block';
-        }
-    }
-
-    /* PDF Generators */
-    function generateStandupPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        const reportDate = activePdfData ? activePdfData.date : document.getElementById('reportDate').value;
-        const reportTime = activePdfData ? activePdfData.time : document.getElementById('reportTime').value;
-
-        const onsite = [], online = [], absent = [], memberStatuses = {};
-
-        if (activePdfData && activePdfData.attendance) {
-            Object.entries(activePdfData.attendance).forEach(([m, status]) => {
-                memberStatuses[m] = status;
-                if (status === 'On-site') onsite.push(m);
-                else if (status === 'Online') online.push(m);
-                else absent.push(m);
-            });
-        } else {
-            teamMembers.forEach((member) => {
-                const memberId = member.toLowerCase().replace(/\s+/g, '_');
-                const status = document.getElementById(`att_status_${memberId}`).value;
-                memberStatuses[member] = status;
-
-                if (status === 'On-site') onsite.push(member);
-                else if (status === 'Online') online.push(member);
-                else absent.push(member);
-            });
-        }
-
-        let y = 20;
-
-        doc.setFillColor(28, 28, 30);
-        doc.rect(0, 0, 210, 42, "F");
-
-        doc.setFontSize(16);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.text("DAILY STAND-UP REPORT", 16, y);
-
-        doc.setFontSize(11);
-        doc.setTextColor(142, 142, 147);
-        doc.setFont("helvetica", "normal");
-        doc.text("Sahansa The PM's Management Suite", 16, y + 7);
-
-        y = 52;
-
-        doc.setFillColor(242, 242, 247);
-        doc.roundedRect(16, y, 178, 14, 2, 2, "F");
-
-        doc.setFontSize(9);
-        doc.setTextColor(108, 108, 112);
-        doc.setFont("helvetica", "bold");
-        doc.text("DATE:", 22, y + 9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(28, 28, 30);
-        doc.text(reportDate, 35, y + 9);
-
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(108, 108, 112);
-        doc.text("TIME:", 110, y + 9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(28, 28, 30);
-        doc.text(reportTime, 122, y + 9);
-
-        y += 24;
-
+    const attendeesBoxHeight = 18 + (wrappedPartiesText.length * 4.5);
+
+    doc.setFillColor(242, 242, 247);
+    doc.roundedRect(16, y, 178, attendeesBoxHeight, 2, 2, "F");
+
+    doc.setFontSize(9);
+    doc.setTextColor(108, 108, 112);
+    doc.setFont("helvetica", "bold");
+    doc.text("TITLE:", 22, y + 8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(28, 28, 30);
+    doc.text(doc.splitTextToSize(title, 80), 36, y + 8);
+
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(108, 108, 112);
+    doc.text("DATE & TIME:", 120, y + 8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(28, 28, 30);
+    doc.text(`${date} @ ${time}`, 145, y + 8);
+
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(108, 108, 112);
+    doc.text("ATTENDEES:", 22, y + 16);
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(28, 28, 30);
+    
+    let partyY = y + 16;
+    wrappedPartiesText.forEach((line, idx) => {
+        doc.text(line, 46, partyY + (idx * 4.5));
+    });
+
+    y += attendeesBoxHeight + 10;
+
+    // Helper to render long text sections with automatic boxes & multipage handling
+    function renderSection(sectionTitle, textContent) {
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(0, 113, 227);
-        doc.text("ATTENDANCE REGISTER", 16, y);
+        
+        // Page break check for section title
+        if (y + 15 > 275) {
+            doc.addPage();
+            y = 20;
+        }
 
+        doc.text(sectionTitle, 16, y);
         y += 6;
 
-        const cardWidth = 56;
-        doc.setFillColor(242, 242, 247);
-        doc.roundedRect(16, y, cardWidth, 28, 2, 2, "F");
-        doc.roundedRect(77, y, cardWidth, 28, 2, 2, "F");
-        doc.roundedRect(138, y, cardWidth, 28, 2, 2, "F");
-
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(52, 199, 89);
-        doc.text("On-Site (" + onsite.length + ")", 20, y + 7);
+        doc.setFontSize(8.5);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
         doc.setTextColor(28, 28, 30);
-        doc.text(doc.splitTextToSize(onsite.length > 0 ? onsite.join(", ") : "None", 48), 20, y + 13);
 
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 113, 227);
-        doc.text("Online (" + online.length + ")", 81, y + 7);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(28, 28, 30);
-        doc.text(doc.splitTextToSize(online.length > 0 ? online.join(", ") : "None", 48), 81, y + 13);
+        const splitLines = doc.splitTextToSize(textContent, 168);
+        const lineHeight = 4.5;
+        const totalTextHeight = splitLines.length * lineHeight;
+        const boxHeight = totalTextHeight + 8;
 
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(255, 59, 48);
-        doc.text("Absent (" + absent.length + ")", 142, y + 7);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(28, 28, 30);
-        doc.text(doc.splitTextToSize(absent.length > 0 ? absent.join(", ") : "None", 48), 142, y + 13);
-
-        y += 36;
-        doc.setDrawColor(229, 229, 234);
-        doc.setLineWidth(0.5);
-        doc.line(16, y, 194, y);
-        y += 10;
-
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 113, 227);
-        doc.text("TEAM UPDATES", 16, y);
-        y += 8;
-
-        updateMembers.forEach((member) => {
-            const memberId = member.toLowerCase().replace(/\s+/g, '_');
-            let updateText = "No update submitted.";
-            if (activePdfData && activePdfData.updates) {
-                updateText = activePdfData.updates[member] || "No update submitted.";
-            } else {
-                updateText = document.getElementById(`update_${memberId}`).value.trim() || "No update submitted.";
-            }
-
-            const memberStatus = memberStatuses[member] || 'On-site';
-            const splitText = doc.splitTextToSize(updateText, 168);
-            const cardHeight = 10 + (splitText.length * 4.5);
-
-            if (y + cardHeight > 275) {
-                doc.addPage();
-                y = 20;
-            }
-
+        // If the box fits completely on the current page
+        if (y + boxHeight <= 275) {
             doc.setFillColor(242, 242, 247);
             doc.setDrawColor(229, 229, 234);
-            doc.roundedRect(16, y, 178, cardHeight, 2, 2, "FD");
+            doc.roundedRect(16, y, 178, boxHeight, 2, 2, "FD");
+            doc.text(splitLines, 20, y + 6);
+            y += boxHeight + 10;
+        } else {
+            // Split multiline content across pages
+            let lineIndex = 0;
+            while (lineIndex < splitLines.length) {
+                const spaceRemaining = 275 - y;
+                const linesThatFit = Math.floor((spaceRemaining - 8) / lineHeight);
 
-            if (memberStatus === 'On-site') doc.setFillColor(52, 199, 89);
-            else if (memberStatus === 'Online') doc.setFillColor(0, 113, 227);
-            else doc.setFillColor(255, 59, 48);
-            doc.rect(16, y, 3, cardHeight, "F");
+                if (linesThatFit <= 0) {
+                    doc.addPage();
+                    y = 20;
+                    continue;
+                }
 
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(28, 28, 30);
-            doc.text(member, 22, y + 6);
+                const chunk = splitLines.slice(lineIndex, lineIndex + linesThatFit);
+                const chunkBoxHeight = (chunk.length * lineHeight) + 8;
 
-            doc.setFontSize(7.5);
-            if (memberStatus === 'On-site') doc.setTextColor(52, 199, 89);
-            else if (memberStatus === 'Online') doc.setTextColor(0, 113, 227);
-            else doc.setTextColor(255, 59, 48);
-            
-            const statusLabel = memberStatus === 'Online' ? 'JOINED ONLINE' : memberStatus.toUpperCase();
-            doc.text(statusLabel, 188 - doc.getTextWidth(statusLabel), y + 6);
+                doc.setFillColor(242, 242, 247);
+                doc.setDrawColor(229, 229, 234);
+                doc.roundedRect(16, y, 178, chunkBoxHeight, 2, 2, "FD");
+                doc.text(chunk, 20, y + 6);
 
-            doc.setFontSize(8.5);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(108, 108, 112);
-            doc.text(splitText, 22, y + 12);
+                lineIndex += linesThatFit;
+                y += chunkBoxHeight + 6;
 
-            y += cardHeight + 6;
-        });
-
-        doc.save(`Standup_Report_${reportDate}.pdf`);
-        activePdfData = null;
-    }
-
-    function generateMOMPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        const title = activePdfData ? activePdfData.title : (document.getElementById('momTitle').value || "Meeting Minutes");
-        const rawAttendees = activePdfData ? activePdfData.attendees : (document.getElementById('momAttendees').value || "All Members");
-        const date = activePdfData ? activePdfData.date : (document.getElementById('momDate').value || new Date().toISOString().split('T')[0]);
-        const time = activePdfData ? activePdfData.time : (document.getElementById('momTime').value || "N/A");
-        const discussions = activePdfData ? activePdfData.discussions : (document.getElementById('momDiscussions').value || "None recorded.");
-        const actions = activePdfData ? activePdfData.actions : (document.getElementById('momActions').value || "None recorded.");
-
-        const parties = rawAttendees.split('|').map(p => p.trim()).filter(Boolean);
-
-        let y = 20;
-
-        doc.setFillColor(28, 28, 30);
-        doc.rect(0, 0, 210, 42, "F");
-
-        doc.setFontSize(16);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.text("MEETING MINUTES (MOM)", 16, y);
-
-        doc.setFontSize(11);
-        doc.setTextColor(142, 142, 147);
-        doc.setFont("helvetica", "normal");
-        doc.text("Sahansa The PM's Management Suite", 16, y + 7);
-
-        y = 52;
-
-        const attendeesBoxHeight = 16 + (parties.length * 5);
-        doc.setFillColor(242, 242, 247);
-        doc.roundedRect(16, y, 178, attendeesBoxHeight, 2, 2, "F");
-
-        doc.setFontSize(9);
-        doc.setTextColor(108, 108, 112);
-        doc.setFont("helvetica", "bold");
-        doc.text("TITLE:", 22, y + 8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(28, 28, 30);
-        doc.text(title, 36, y + 8);
-
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(108, 108, 112);
-        doc.text("DATE & TIME:", 120, y + 8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(28, 28, 30);
-        doc.text(`${date} @ ${time}`, 145, y + 8);
-
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(108, 108, 112);
-        doc.text("ATTENDEES:", 22, y + 16);
-
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(28, 28, 30);
-        let partyY = y + 16;
-        parties.forEach((party, index) => {
-            if (index === 0) {
-                doc.text(party, 46, partyY);
-            } else {
-                partyY += 5;
-                doc.text(party, 46, partyY);
+                if (lineIndex < splitLines.length) {
+                    doc.addPage();
+                    y = 20;
+                }
             }
-        });
-
-        y += attendeesBoxHeight + 10;
-
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 113, 227);
-        doc.text("KEY DISCUSSIONS & DECISIONS", 16, y);
-
-        y += 6;
-        const splitDisc = doc.splitTextToSize(discussions, 170);
-        const discHeight = 12 + (splitDisc.length * 4.5);
-
-        doc.setFillColor(242, 242, 247);
-        doc.setDrawColor(229, 229, 234);
-        doc.roundedRect(16, y, 178, discHeight, 2, 2, "FD");
-
-        doc.setFontSize(8.5);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(108, 108, 112);
-        doc.text(splitDisc, 20, y + 8);
-
-        y += discHeight + 14;
-
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 113, 227);
-        doc.text("ACTION ITEMS & RESPONSIBILITIES", 16, y);
-
-        y += 6;
-        const splitAct = doc.splitTextToSize(actions, 170);
-        const actHeight = 12 + (splitAct.length * 4.5);
-
-        doc.setFillColor(242, 242, 247);
-        doc.setDrawColor(229, 229, 234);
-        doc.roundedRect(16, y, 178, actHeight, 2, 2, "FD");
-
-        doc.setFontSize(8.5);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(108, 108, 112);
-        doc.text(splitAct, 20, y + 8);
-
-        doc.save(`Meeting_Minutes_${date}.pdf`);
-        activePdfData = null;
+            y += 4;
+        }
     }
-</script>
 
-</body>
-</html>
+    // --- KEY DISCUSSIONS & DECISIONS ---
+    renderSection("KEY DISCUSSIONS & DECISIONS", discussions);
+
+    // --- ACTION ITEMS & RESPONSIBILITIES ---
+    renderSection("ACTION ITEMS & RESPONSIBILITIES", actions);
+
+    doc.save(`Meeting_Minutes_${date}.pdf`);
+    activePdfData = null;
+}
