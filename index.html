@@ -35,6 +35,8 @@
             --status-online: #0a84ff;
             --status-absent: #ff453a;
             --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --dropzone-bg: #121214;
+            --dropzone-border: #3f3f46;
         }
 
         :root[data-theme="light"] {
@@ -63,6 +65,8 @@
             --status-online: #007aff;
             --status-absent: #ff3b30;
             --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.05);
+            --dropzone-bg: #f8f9fa;
+            --dropzone-border: #cbd5e1;
         }
 
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
@@ -138,7 +142,7 @@
 
         /* Content Layout */
         .main-content {
-            margin-left: 260px; flex: 1; padding: 48px 56px; max-width: 1000px; width: 100%; min-width: 0;
+            margin-left: 260px; flex: 1; padding: 48px 56px; max-width: 1100px; width: 100%; min-width: 0;
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: appleFadeIn 0.2s ease; }
@@ -194,14 +198,109 @@
         button.btn-primary {
             flex: 2; background-color: var(--accent); color: #ffffff; border: none; padding: 12px 18px;
             font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; min-height: 44px;
+            transition: background 0.15s;
         }
         button.btn-primary:hover { background-color: var(--accent-hover); }
         button.btn-secondary {
+            flex: 1; background-color: var(--bg-elevated-2); color: var(--label-primary); border: 1px solid var(--separator);
+            padding: 12px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; min-height: 44px;
+            transition: background 0.15s;
+        }
+        button.btn-secondary:hover { background-color: var(--bg-elevated-3); }
+        button.btn-danger {
             flex: 1; background-color: var(--bg-elevated-2); color: var(--red); border: 1px solid var(--separator);
             padding: 12px 18px; font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; min-height: 44px;
         }
-        button.btn-secondary:hover { background-color: var(--red-soft); }
+        button.btn-danger:hover { background-color: var(--red-soft); }
+        button.btn-whatsapp {
+            background-color: #25d366; color: #ffffff; border: none; font-weight: 600;
+        }
+        button.btn-whatsapp:hover { background-color: #20ba5a; }
+
         .draft-status { font-size: 12px; color: var(--label-tertiary); text-align: right; margin-bottom: 12px; }
+
+        /* WhatsApp Drag & Drop Studio Styles */
+        .dnd-studio-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .pool-panel {
+            background: var(--bg-elevated);
+            border: 1px solid var(--separator);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .drag-card-item {
+            background: var(--bg-elevated-2);
+            border: 1px solid var(--separator);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .drag-card-item:active { cursor: grabbing; opacity: 0.8; }
+        .drag-card-title { font-weight: 600; font-size: 13px; color: var(--label-primary); }
+        .drag-comment-input {
+            min-height: 32px !important;
+            padding: 4px 8px !important;
+            font-size: 12px !important;
+            background: var(--bg-elevated-3) !important;
+            border-radius: 6px !important;
+        }
+        .drop-target-zone {
+            min-height: 120px;
+            background: var(--dropzone-bg);
+            border: 2px dashed var(--dropzone-border);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .drop-target-zone.drag-active {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .categories-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .category-box {
+            background: var(--bg-elevated);
+            border: 1px solid var(--separator);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .category-box h4 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--label-primary);
+        }
+        .preview-box {
+            background: var(--bg-elevated-2);
+            border: 1px solid var(--separator);
+            border-radius: 10px;
+            padding: 14px;
+            white-space: pre-wrap;
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--label-primary);
+            margin-top: 10px;
+        }
 
         /* Modals */
         .modal-overlay {
@@ -245,14 +344,14 @@
         .p-medium { background: var(--orange-soft); color: var(--orange); }
         .p-low { background: var(--green-soft); color: var(--green); }
 
-        @media screen and (max-width: 768px) {
+        @media screen and (max-width: 860px) {
             .mobile-header { display: flex; }
             .sidebar { transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
             .main-content { margin-left: 0; padding: 72px 14px 32px 14px; max-width: 100vw; }
-            .grid-2, .attendance-grid { grid-template-columns: 1fr; }
+            .grid-2, .attendance-grid, .dnd-studio-container, .categories-matrix { grid-template-columns: 1fr; }
             .actions-group { flex-direction: column-reverse; gap: 8px; }
-            button.btn-primary, button.btn-secondary { width: 100%; }
+            button.btn-primary, button.btn-secondary, button.btn-danger { width: 100%; }
         }
     </style>
 </head>
@@ -283,7 +382,11 @@
     </div>
 
     <ul class="nav-menu">
-        <li class="nav-item active" id="nav_standup" onclick="switchTab('standup')">
+        <li class="nav-item active" id="nav_wa" onclick="switchTab('wa')">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp Availability
+        </li>
+        <li class="nav-item" id="nav_standup" onclick="switchTab('standup')">
             <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             Stand-Up Report
         </li>
@@ -321,8 +424,60 @@
 <!-- Main Workspace -->
 <main class="main-content">
 
+    <!-- 0. WHATSAPP AVAILABILITY STUDIO TAB -->
+    <section id="tab-wa" class="tab-content active">
+        <div class="page-header">
+            <h1>WhatsApp Availability Dispatcher</h1>
+            <p>Drag team members into categories, add status/leave remarks, and export directly to WhatsApp.</p>
+        </div>
+
+        <div class="dnd-studio-container">
+            <!-- Left Side: Member Directory -->
+            <div class="pool-panel">
+                <label>Team Directory</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="customMemberInput" placeholder="Add extra person...">
+                    <button type="button" class="btn-primary" style="flex: 0 0 auto; padding: 8px 14px; min-height: 42px;" onclick="addCustomDndMember()">Add</button>
+                </div>
+                <div class="drop-target-zone" id="dnd-pool" ondragover="allowDropZone(event)" ondragleave="leaveDropZone(event)" ondrop="handleDropZone(event)"></div>
+            </div>
+
+            <!-- Right Side: Categorized Status Columns -->
+            <div class="categories-matrix">
+                <div class="category-box">
+                    <h4>Informed On Leave Individuals -&gt;</h4>
+                    <div class="drop-target-zone" id="dnd-leave" ondragover="allowDropZone(event)" ondragleave="leaveDropZone(event)" ondrop="handleDropZone(event)"></div>
+                </div>
+
+                <div class="category-box">
+                    <h4>Informed Work From Home (WFH) -&gt;</h4>
+                    <div class="drop-target-zone" id="dnd-wfh" ondragover="allowDropZone(event)" ondragleave="leaveDropZone(event)" ondrop="handleDropZone(event)"></div>
+                </div>
+
+                <div class="category-box">
+                    <h4>On-Site -&gt;</h4>
+                    <div class="drop-target-zone" id="dnd-onsite" ondragover="allowDropZone(event)" ondragleave="leaveDropZone(event)" ondrop="handleDropZone(event)"></div>
+                </div>
+
+                <div class="category-box">
+                    <h4>Has not arrived at the office yet - (Pending Arrival) -&gt;</h4>
+                    <div class="drop-target-zone" id="dnd-pending" ondragover="allowDropZone(event)" ondragleave="leaveDropZone(event)" ondrop="handleDropZone(event)"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <label>Live WhatsApp Formatted Preview</label>
+            <div class="preview-box" id="wa-preview-text"></div>
+            <div class="actions-group">
+                <button type="button" class="btn-secondary" onclick="copyWaText()">Copy Message Text</button>
+                <button type="button" class="btn-primary btn-whatsapp" onclick="dispatchToWhatsApp()">Open in WhatsApp</button>
+            </div>
+        </div>
+    </section>
+
     <!-- 1. STAND-UP REPORT TAB -->
-    <section id="tab-standup" class="tab-content active">
+    <section id="tab-standup" class="tab-content">
         <div class="page-header">
             <h1>Daily Stand-Up Report</h1>
             <p>Track team attendance and member status.</p>
@@ -354,7 +509,7 @@
                 </div>
 
                 <div class="actions-group">
-                    <button type="button" class="btn-secondary" onclick="clearDraft()">Reset Draft</button>
+                    <button type="button" class="btn-danger" onclick="clearDraft()">Reset Draft</button>
                     <button type="button" class="btn-primary" onclick="saveStandupAndModal()">Save & Generate PDF</button>
                 </div>
             </form>
@@ -504,7 +659,6 @@
 </div>
 
 <script>
-    // Master Security Passwords
     const DEFAULT_MASTER_PASSWORD = "1234";
     const DRAFT_KEY = "sahansa_pm_standup_draft";
 
@@ -529,6 +683,7 @@
 
         renderAttendance();
         renderUpdateInputs();
+        initDndStudio();
         loadDraft();
         loadLogs();
     });
@@ -561,12 +716,13 @@
 
         document.getElementById(`tab-${tabId}`).classList.add('active');
         
-        const tabMap = { 'standup': 0, 'mom': 1, 'notes': 2, 'history': 3, 'recycle': 4 };
-        if (document.querySelectorAll('.nav-item')[tabMap[tabId]]) {
-            document.querySelectorAll('.nav-item')[tabMap[tabId]].classList.add('active');
+        const tabMap = { 'wa': 'nav_wa', 'standup': 'nav_standup', 'mom': 'nav_mom', 'notes': 'nav_notes', 'history': 'nav_history', 'recycle': 'nav_recycle' };
+        if (document.getElementById(tabMap[tabId])) {
+            document.getElementById(tabMap[tabId]).classList.add('active');
         }
 
         if (tabId === 'history' || tabId === 'recycle') loadLogs();
+        if (tabId === 'wa') updateWaPreview();
         closeMobileMenu();
     }
 
@@ -576,6 +732,111 @@
         } else {
             openPasswordModal('unlock_recycle');
         }
+    }
+
+    /* WhatsApp Drag & Drop Studio Logic */
+    function initDndStudio() {
+        const pool = document.getElementById('dnd-pool');
+        pool.innerHTML = '';
+        teamMembers.forEach((member, index) => {
+            pool.appendChild(createDndCard(member, `dnd_card_${index}`));
+        });
+        updateWaPreview();
+    }
+
+    function createDndCard(name, id, initialComment = '') {
+        const card = document.createElement('div');
+        card.className = 'drag-card-item';
+        card.id = id;
+        card.draggable = true;
+        card.ondragstart = (ev) => ev.dataTransfer.setData("text/plain", ev.target.id);
+
+        card.innerHTML = `
+            <div class="drag-card-title">${escapeHtml(name)}</div>
+            <input type="text" class="drag-comment-input" placeholder="Reason / note..." value="${escapeHtml(initialComment)}" oninput="updateWaPreview()" />
+        `;
+        return card;
+    }
+
+    function addCustomDndMember() {
+        const input = document.getElementById('customMemberInput');
+        const name = input.value.trim();
+        if (!name) return;
+
+        const id = `dnd_card_custom_${Date.now()}`;
+        const card = createDndCard(name, id);
+        document.getElementById('dnd-pool').appendChild(card);
+        input.value = '';
+        updateWaPreview();
+    }
+
+    function allowDropZone(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('drag-active');
+    }
+
+    function leaveDropZone(ev) {
+        ev.currentTarget.classList.remove('drag-active');
+    }
+
+    function handleDropZone(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.remove('drag-active');
+        const cardId = ev.dataTransfer.getData("text/plain");
+        const draggedCard = document.getElementById(cardId);
+        if (draggedCard && ev.currentTarget.classList.contains('drop-target-zone')) {
+            ev.currentTarget.appendChild(draggedCard);
+            updateWaPreview();
+        }
+    }
+
+    function formatWhatsAppTimestamp(d) {
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let hours = d.getHours();
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${hours}:${minutes}${ampm}`;
+    }
+
+    function parseDndSection(zoneId) {
+        const zone = document.getElementById(zoneId);
+        const cards = zone.querySelectorAll('.drag-card-item');
+        if (cards.length === 0) return "-\n";
+
+        let result = "";
+        cards.forEach((card, idx) => {
+            const name = card.querySelector('.drag-card-title').innerText;
+            const note = card.querySelector('.drag-comment-input').value.trim();
+            result += `${idx + 1}.${name}${note ? ': ' + note : ''}\n`;
+        });
+        return result;
+    }
+
+    function generateWaMessageText() {
+        const timestamp = formatWhatsAppTimestamp(new Date());
+        return `Team Availability Update – ${timestamp}\n\n` +
+            `Informed On Leave Individuals ->\n\n${parseDndSection('dnd-leave')}\n` +
+            `Informed Work From Home (WFH) ->\n\n${parseDndSection('dnd-wfh')}\n` +
+            `On-Site ->\n\n${parseDndSection('dnd-onsite')}\n` +
+            `Has not arrived at the office yet - (Pending Arrival) ->\n\n${parseDndSection('dnd-pending')}`;
+    }
+
+    function updateWaPreview() {
+        const previewEl = document.getElementById('wa-preview-text');
+        if (previewEl) previewEl.innerText = generateWaMessageText();
+    }
+
+    function copyWaText() {
+        const text = generateWaMessageText();
+        navigator.clipboard.writeText(text).then(() => {
+            alert("WhatsApp update copied to clipboard!");
+        });
+    }
+
+    function dispatchToWhatsApp() {
+        const text = encodeURIComponent(generateWaMessageText());
+        window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     }
 
     /* Attendance & Input Rendering */
@@ -1194,7 +1455,6 @@
 
         let y = 20;
 
-        // Header Banner
         doc.setFillColor(28, 28, 30);
         doc.rect(0, 0, 210, 42, "F");
 
@@ -1210,7 +1470,6 @@
 
         y = 52;
 
-        // --- ATTENDEES & METADATA BLOCK ---
         const parties = rawAttendees.split('|').map(p => p.trim()).filter(Boolean);
         let wrappedPartiesText = [];
         
@@ -1253,7 +1512,6 @@
 
         y += attendeesBoxHeight + 10;
 
-        // Helper function for rendering long text blocks with multi-page overflow
         function renderSection(sectionTitle, textContent) {
             doc.setFontSize(11);
             doc.setFont("helvetica", "bold");
@@ -1314,10 +1572,7 @@
             }
         }
 
-        // --- KEY DISCUSSIONS & DECISIONS ---
         renderSection("KEY DISCUSSIONS & DECISIONS", discussions);
-
-        // --- ACTION ITEMS & RESPONSIBILITIES ---
         renderSection("ACTION ITEMS & RESPONSIBILITIES", actions);
 
         doc.save(`Meeting_Minutes_${date}.pdf`);
