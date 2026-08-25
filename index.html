@@ -428,14 +428,13 @@
     <section id="tab-wa" class="tab-content active">
         <div class="page-header">
             <h1>WhatsApp Availability Dispatcher</h1>
-            <p>Drag team members into categories, add status/leave remarks, and export directly to WhatsApp.</p>
+            <p>Drag team members into categories, add status/leave remarks, and sync with the Stand-Up report.</p>
         </div>
 
         <div class="dnd-studio-container">
             <!-- Left Side: Member Directory -->
             <div class="pool-panel">
                 <label>Team Directory</label>
-                <!-- Search Box -->
                 <input type="text" id="memberSearchInput" placeholder="🔍 Search member name..." oninput="filterDirectoryMembers()" style="margin-bottom: 4px;">
                 
                 <div style="display: flex; gap: 6px;">
@@ -473,9 +472,10 @@
             <label>Live WhatsApp Formatted Preview</label>
             <div class="preview-box" id="wa-preview-text"></div>
             <div class="actions-group">
+                <button type="button" class="btn-primary" onclick="syncAvailabilityToStandup()">Sync to Stand-Up Report</button>
                 <button type="button" class="btn-secondary" onclick="saveWaLocalRecord()">Save to History</button>
-                <button type="button" class="btn-secondary" onclick="copyWaText()">Copy Message Text</button>
-                <button type="button" class="btn-primary btn-whatsapp" onclick="dispatchToWhatsApp()">Save & Open WhatsApp</button>
+                <button type="button" class="btn-secondary" onclick="copyWaText()">Copy Text</button>
+                <button type="button" class="btn-primary btn-whatsapp" onclick="dispatchToWhatsApp()">Open WhatsApp</button>
             </div>
         </div>
     </section>
@@ -483,8 +483,13 @@
     <!-- 1. STAND-UP REPORT TAB -->
     <section id="tab-standup" class="tab-content">
         <div class="page-header">
-            <h1>Daily Stand-Up Report</h1>
-            <p>Track team attendance and member status.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h1>Daily Stand-Up Report</h1>
+                    <p>Track team attendance and member status.</p>
+                </div>
+                <button type="button" class="btn-secondary" style="flex: 0 0 auto;" onclick="syncStandupToAvailability()">Sync from WhatsApp Studio</button>
+            </div>
         </div>
 
         <div class="draft-status" id="draftStatus">Draft state: Unsaved</div>
@@ -947,6 +952,77 @@
         navigator.clipboard.writeText(record.messageText).then(() => {
             alert("Historical WhatsApp message copied to clipboard!");
         });
+    }
+
+    /* SYNCHRONIZATION ENGINES */
+    function syncAvailabilityToStandup() {
+        const leave = getCategoryRawState('dnd-leave');
+        const wfh = getCategoryRawState('dnd-wfh');
+        const onsite = getCategoryRawState('dnd-onsite');
+        const pending = getCategoryRawState('dnd-pending');
+
+        const applyMemberStatus = (memberObj, statusVal, defaultPrefix) => {
+            const memberId = memberObj.name.toLowerCase().replace(/\s+/g, '_');
+            const select = document.getElementById(`att_status_${memberId}`);
+            if (select) {
+                select.value = statusVal;
+                updateMemberCardStatus(memberObj.name);
+            }
+            const updateArea = document.getElementById(`update_${memberId}`);
+            if (updateArea && memberObj.name !== "Sahansa") {
+                if (memberObj.note && memberObj.note.trim()) {
+                    updateArea.value = `[${defaultPrefix}] ${memberObj.note.trim()}`;
+                } else if (!updateArea.value.trim()) {
+                    updateArea.value = `Status: ${defaultPrefix}`;
+                }
+            }
+        };
+
+        onsite.forEach(m => applyMemberStatus(m, 'On-site', 'On-Site'));
+        wfh.forEach(m => applyMemberStatus(m, 'Online', 'WFH'));
+        leave.forEach(m => applyMemberStatus(m, 'Absent', 'On Leave'));
+        pending.forEach(m => applyMemberStatus(m, 'Absent', 'Pending Arrival'));
+
+        saveDraft();
+        switchTab('standup');
+        alert("Availability state successfully synced to the Stand-Up form!");
+    }
+
+    function syncStandupToAvailability() {
+        const allCards = Array.from(document.querySelectorAll('.drag-card-item'));
+        const poolZone = document.getElementById('dnd-pool');
+        const onsiteZone = document.getElementById('dnd-onsite');
+        const wfhZone = document.getElementById('dnd-wfh');
+        const leaveZone = document.getElementById('dnd-leave');
+
+        teamMembers.forEach(member => {
+            const memberId = member.toLowerCase().replace(/\s+/g, '_');
+            const statusSelect = document.getElementById(`att_status_${memberId}`);
+            const updateArea = document.getElementById(`update_${memberId}`);
+            const card = allCards.find(c => c.querySelector('.drag-card-title').innerText.toLowerCase() === member.toLowerCase());
+
+            if (!card || !statusSelect) return;
+
+            const commentInput = card.querySelector('.drag-comment-input');
+            if (updateArea && updateArea.value.trim() && !commentInput.value.trim()) {
+                commentInput.value = updateArea.value.trim();
+            }
+
+            const status = statusSelect.value;
+            if (status === 'On-site') {
+                onsiteZone.appendChild(card);
+            } else if (status === 'Online') {
+                wfhZone.appendChild(card);
+            } else if (status === 'Absent') {
+                leaveZone.appendChild(card);
+            } else {
+                poolZone.appendChild(card);
+            }
+        });
+
+        updateWaPreview();
+        switchTab('wa');
+        alert("Stand-Up attendance successfully synchronized into WhatsApp Availability Studio!");
     }
 
     /* Attendance & Input Rendering */
