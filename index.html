@@ -222,7 +222,7 @@
         /* WhatsApp Drag & Drop Studio Styles */
         .dnd-studio-container {
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 320px 1fr;
             gap: 20px;
         }
         .pool-panel {
@@ -323,7 +323,7 @@
         .log-item { padding: 16px; background: var(--bg-elevated-2); border: 1px solid var(--separator); border-radius: 12px; margin-bottom: 14px; }
         .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
         .log-item h5 { margin: 0; font-size: 15px; font-weight: 600; color: var(--label-primary); }
-        .log-details-block { font-size: 13px; color: var(--label-secondary); line-height: 1.5; margin-top: 8px; background: var(--bg-elevated); padding: 12px; border-radius: 8px; border: 1px solid var(--separator); }
+        .log-details-block { font-size: 13px; color: var(--label-secondary); line-height: 1.5; margin-top: 8px; background: var(--bg-elevated); padding: 12px; border-radius: 8px; border: 1px solid var(--separator); white-space: pre-wrap; }
         .log-item-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .btn-log-action { background: var(--bg-elevated-3); border: 1px solid var(--separator); color: var(--label-primary); padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; min-height: 36px; }
         .btn-log-action:hover { background: var(--separator-strong); }
@@ -435,6 +435,9 @@
             <!-- Left Side: Member Directory -->
             <div class="pool-panel">
                 <label>Team Directory</label>
+                <!-- Search Box -->
+                <input type="text" id="memberSearchInput" placeholder="🔍 Search member name..." oninput="filterDirectoryMembers()" style="margin-bottom: 4px;">
+                
                 <div style="display: flex; gap: 6px;">
                     <input type="text" id="customMemberInput" placeholder="Add extra person...">
                     <button type="button" class="btn-primary" style="flex: 0 0 auto; padding: 8px 14px; min-height: 42px;" onclick="addCustomDndMember()">Add</button>
@@ -470,8 +473,9 @@
             <label>Live WhatsApp Formatted Preview</label>
             <div class="preview-box" id="wa-preview-text"></div>
             <div class="actions-group">
+                <button type="button" class="btn-secondary" onclick="saveWaLocalRecord()">Save to History</button>
                 <button type="button" class="btn-secondary" onclick="copyWaText()">Copy Message Text</button>
-                <button type="button" class="btn-primary btn-whatsapp" onclick="dispatchToWhatsApp()">Open in WhatsApp</button>
+                <button type="button" class="btn-primary btn-whatsapp" onclick="dispatchToWhatsApp()">Save & Open WhatsApp</button>
             </div>
         </div>
     </section>
@@ -600,7 +604,12 @@
     <section id="tab-history" class="tab-content">
         <div class="page-header">
             <h1>History & Saved Records</h1>
-            <p>Review, re-download PDFs, edit, or soft-delete previously saved records.</p>
+            <p>Review, re-download, reload into editor, or soft-delete previously saved records.</p>
+        </div>
+
+        <div class="card">
+            <h3>Saved WhatsApp Availability Updates</h3>
+            <div id="waHistoryLog"></div>
         </div>
 
         <div class="card">
@@ -624,6 +633,11 @@
         <div class="page-header">
             <h1>Recycle Bin (Soft Deleted Items)</h1>
             <p>Restore accidentally deleted items or permanently purge them.</p>
+        </div>
+
+        <div class="card">
+            <h3>Deleted WhatsApp Availability Updates</h3>
+            <div id="recycleWaLog"></div>
         </div>
 
         <div class="card">
@@ -734,7 +748,7 @@
         }
     }
 
-    /* WhatsApp Drag & Drop Studio Logic */
+    /* WhatsApp Drag & Drop Studio & Search */
     function initDndStudio() {
         const pool = document.getElementById('dnd-pool');
         pool.innerHTML = '';
@@ -767,7 +781,23 @@
         const card = createDndCard(name, id);
         document.getElementById('dnd-pool').appendChild(card);
         input.value = '';
+        filterDirectoryMembers();
         updateWaPreview();
+    }
+
+    function filterDirectoryMembers() {
+        const query = document.getElementById('memberSearchInput').value.toLowerCase().trim();
+        const pool = document.getElementById('dnd-pool');
+        const cards = pool.querySelectorAll('.drag-card-item');
+
+        cards.forEach(card => {
+            const name = card.querySelector('.drag-card-title').innerText.toLowerCase();
+            if (name.includes(query)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
 
     function allowDropZone(ev) {
@@ -786,6 +816,7 @@
         const draggedCard = document.getElementById(cardId);
         if (draggedCard && ev.currentTarget.classList.contains('drop-target-zone')) {
             ev.currentTarget.appendChild(draggedCard);
+            filterDirectoryMembers();
             updateWaPreview();
         }
     }
@@ -813,6 +844,20 @@
         return result;
     }
 
+    function getCategoryRawState(zoneId) {
+        const zone = document.getElementById(zoneId);
+        const cards = zone.querySelectorAll('.drag-card-item');
+        const list = [];
+        cards.forEach(card => {
+            list.push({
+                id: card.id,
+                name: card.querySelector('.drag-card-title').innerText,
+                note: card.querySelector('.drag-comment-input').value
+            });
+        });
+        return list;
+    }
+
     function generateWaMessageText() {
         const timestamp = formatWhatsAppTimestamp(new Date());
         return `Team Availability Update – ${timestamp}\n\n` +
@@ -827,6 +872,36 @@
         if (previewEl) previewEl.innerText = generateWaMessageText();
     }
 
+    function saveWaLocalRecord() {
+        const timestamp = formatWhatsAppTimestamp(new Date());
+        const messageText = generateWaMessageText();
+        
+        const state = {
+            leave: getCategoryRawState('dnd-leave'),
+            wfh: getCategoryRawState('dnd-wfh'),
+            onsite: getCategoryRawState('dnd-onsite'),
+            pending: getCategoryRawState('dnd-pending'),
+            pool: getCategoryRawState('dnd-pool')
+        };
+
+        const id = Date.now();
+        const record = {
+            id,
+            timestamp,
+            date: new Date().toISOString().split('T')[0],
+            messageText,
+            state,
+            author: "Sahansa (PM)",
+            soft_deleted: false
+        };
+
+        const logs = JSON.parse(localStorage.getItem('wa_logs') || '[]');
+        logs.unshift(record);
+        localStorage.setItem('wa_logs', JSON.stringify(logs));
+        loadLogs();
+        return record;
+    }
+
     function copyWaText() {
         const text = generateWaMessageText();
         navigator.clipboard.writeText(text).then(() => {
@@ -835,8 +910,43 @@
     }
 
     function dispatchToWhatsApp() {
+        saveWaLocalRecord();
         const text = encodeURIComponent(generateWaMessageText());
         window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    }
+
+    function reloadWaRecordToStudio(id) {
+        const logs = JSON.parse(localStorage.getItem('wa_logs') || '[]');
+        const record = logs.find(x => x.id === id);
+        if (!record || !record.state) return;
+
+        const zones = {
+            'dnd-leave': record.state.leave || [],
+            'dnd-wfh': record.state.wfh || [],
+            'dnd-onsite': record.state.onsite || [],
+            'dnd-pending': record.state.pending || [],
+            'dnd-pool': record.state.pool || []
+        };
+
+        Object.entries(zones).forEach(([zoneId, items]) => {
+            const zone = document.getElementById(zoneId);
+            zone.innerHTML = '';
+            items.forEach(item => {
+                zone.appendChild(createDndCard(item.name, item.id, item.note));
+            });
+        });
+
+        switchTab('wa');
+        updateWaPreview();
+    }
+
+    function copyWaHistoryText(id) {
+        const logs = JSON.parse(localStorage.getItem('wa_logs') || '[]');
+        const record = logs.find(x => x.id === id);
+        if (!record) return;
+        navigator.clipboard.writeText(record.messageText).then(() => {
+            alert("Historical WhatsApp message copied to clipboard!");
+        });
     }
 
     /* Attendance & Input Rendering */
@@ -1026,6 +1136,10 @@
 
     /* History & Recycle Logs Renderers */
     function loadLogs() {
+        const waLogs = JSON.parse(localStorage.getItem('wa_logs') || '[]');
+        document.getElementById('waHistoryLog').innerHTML = renderWaLogHTML(waLogs.filter(w => !w.soft_deleted), false);
+        document.getElementById('recycleWaLog').innerHTML = renderWaLogHTML(waLogs.filter(w => w.soft_deleted), true);
+
         const standupLogs = JSON.parse(localStorage.getItem('standup_logs') || '[]');
         document.getElementById('standupHistoryLog').innerHTML = renderStandupLogHTML(standupLogs.filter(s => !s.soft_deleted), false);
         document.getElementById('recycleStandupLog').innerHTML = renderStandupLogHTML(standupLogs.filter(s => s.soft_deleted), true);
@@ -1037,6 +1151,29 @@
         const notesLogs = JSON.parse(localStorage.getItem('notes_logs') || '[]');
         document.getElementById('notesLog').innerHTML = renderNotesLogHTML(notesLogs.filter(n => !n.soft_deleted), false);
         document.getElementById('recycleNotesLog').innerHTML = renderNotesLogHTML(notesLogs.filter(n => n.soft_deleted), true);
+    }
+
+    function renderWaLogHTML(list, isRecycle) {
+        if (!list.length) return `<p style="color: var(--label-tertiary); font-size: 13px;">No ${isRecycle ? 'deleted' : 'active'} records.</p>`;
+        return list.map((w) => `
+            <div class="log-item">
+                <div class="log-header">
+                    <h5>WhatsApp Availability Record (${escapeHtml(w.timestamp)})</h5>
+                    <span class="meta-tag">By: ${escapeHtml(w.author)}</span>
+                </div>
+                <div class="log-details-block">${escapeHtml(w.messageText)}</div>
+                <div class="log-item-actions">
+                    ${!isRecycle ? `
+                        <button class="btn-log-action" onclick="copyWaHistoryText(${w.id})">Copy Text</button>
+                        <button class="btn-log-action" onclick="reloadWaRecordToStudio(${w.id})">Reload in Studio</button>
+                        <button class="btn-log-action danger" onclick="softDeleteRecord('wa_logs', ${w.id})">Delete</button>
+                    ` : `
+                        <button class="btn-log-action success" onclick="restoreRecord('wa_logs', ${w.id})">Restore</button>
+                        <button class="btn-log-action danger" onclick="permDeleteRecord('wa_logs', ${w.id})">Purge Permanently</button>
+                    `}
+                </div>
+            </div>
+        `).join('');
     }
 
     function renderStandupLogHTML(list, isRecycle) {
