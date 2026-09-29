@@ -442,11 +442,11 @@
     <section id="tab-wa" class="tab-content active">
         <div class="page-header">
             <h1>WhatsApp Availability Dispatcher</h1>
-            <p>Assign team member presence, record remarks, and push directly to chat or sync to the Stand-Up report.</p>
+            <p>Assign team presence, record remarks, and push directly to chat or sync to the Stand-Up report.</p>
         </div>
 
         <div class="wa-studio-wrapper">
-            <!-- Desktop View: Interactive Drag & Drop -->
+            <!-- Desktop View: Drag & Drop -->
             <div class="dnd-studio-container dnd-desktop-view">
                 <div class="pool-panel">
                     <label>Team Directory</label>
@@ -478,7 +478,7 @@
                 </div>
             </div>
 
-            <!-- Mobile View: Clean Touch Triage List -->
+            <!-- Mobile View: Quick Triage List -->
             <div class="dnd-mobile-view">
                 <div class="pool-panel">
                     <label>Quick Assign Status</label>
@@ -643,24 +643,34 @@
 </main>
 
 <script>
-// --- Global Application State ---
+// --- Team Roster Configuration ---
 const DEFAULT_MEMBERS = [
+    "Vinul",
+    "Navodya",
     "Sahansa",
-    "Sanidu",
-    "Nethun",
-    "Sithum",
-    "Kasun",
-    "Dilshan"
+    "Kumuditha",
+    "Nufail",
+    "Ruth",
+    "Chamikara",
+    "Rajitha",
+    "Isuri",
+    "Pubba",
+    "Vishwa",
+    "Ama",
+    "Vihanga"
 ];
 
 let teamState = [];
 
 function initTeamState() {
-    const saved = localStorage.getItem("sahansa_team_state");
+    const saved = localStorage.getItem("sahansa_team_state_v2");
     if (saved) {
         try {
-            teamState = JSON.parse(saved);
-            return;
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                teamState = parsed;
+                return;
+            }
         } catch(e) {}
     }
     teamState = DEFAULT_MEMBERS.map((name, idx) => ({
@@ -669,10 +679,11 @@ function initTeamState() {
         category: "pool",
         remark: ""
     }));
+    persistTeamState();
 }
 
 function persistTeamState() {
-    localStorage.setItem("sahansa_team_state", JSON.stringify(teamState));
+    localStorage.setItem("sahansa_team_state_v2", JSON.stringify(teamState));
 }
 
 // --- Navigation & Mobile Drawer ---
@@ -710,7 +721,7 @@ function toggleTheme() {
     document.getElementById("themeLabel").textContent = next === "dark" ? "Dark Mode" : "Light Mode";
 }
 
-// --- Availability Engine (Desktop DnD + Mobile Triage) ---
+// --- Availability Engine (Includes Sahansa) ---
 let draggedMemberId = null;
 
 function renderAvailabilityUI() {
@@ -795,7 +806,6 @@ function renderMobileTriage() {
     });
 }
 
-// DnD Helpers for Desktop
 function allowDropZone(e) {
     e.preventDefault();
     e.currentTarget.classList.add("drag-active");
@@ -838,12 +848,20 @@ function addCustomMember(origin) {
     const name = input?.value.trim();
     if (!name) return;
 
-    teamState.push({
+    // Insert before Vihanga if Vihanga exists, otherwise push to end
+    const vihangaIndex = teamState.findIndex(m => m.name.toLowerCase() === "vihanga");
+    const newMember = {
         id: "mem_" + Date.now(),
         name: name,
         category: "pool",
         remark: ""
-    });
+    };
+
+    if (vihangaIndex !== -1) {
+        teamState.splice(vihangaIndex, 0, newMember);
+    } else {
+        teamState.push(newMember);
+    }
 
     input.value = "";
     renderAvailabilityUI();
@@ -905,7 +923,7 @@ function saveWaLocalRecord() {
     alert("Record successfully saved to History!");
 }
 
-// --- Stand-Up Engine ---
+// --- Stand-Up Engine (Excludes Sahansa from updates) ---
 function renderStandupForms() {
     const dateInput = document.getElementById("reportDate");
     const timeInput = document.getElementById("reportTime");
@@ -921,7 +939,10 @@ function renderStandupForms() {
     grid.innerHTML = "";
     updatesList.innerHTML = "";
 
-    teamState.forEach(member => {
+    // Filter out Sahansa from taking updates
+    const standupMembers = teamState.filter(m => m.name.trim().toLowerCase() !== "sahansa");
+
+    standupMembers.forEach(member => {
         let defaultStatus = "On-site";
         if (member.category === "wfh") defaultStatus = "Online";
         if (member.category === "leave") defaultStatus = "Absent";
@@ -982,11 +1003,13 @@ function saveStandupAndGeneratePDF() {
     const date = document.getElementById("reportDate").value;
     const time = document.getElementById("reportTime").value;
 
+    const standupMembers = teamState.filter(m => m.name.trim().toLowerCase() !== "sahansa");
+
     const summary = {
         id: "standup_" + Date.now(),
         date: date,
         time: time,
-        members: teamState.map(m => ({
+        members: standupMembers.map(m => ({
             name: m.name,
             status: document.getElementById("att_" + m.id)?.value || "On-site",
             notes: document.getElementById("task_" + m.id)?.value || ""
@@ -997,7 +1020,7 @@ function saveStandupAndGeneratePDF() {
     records.unshift(summary);
     localStorage.setItem("sahansa_standup_records", JSON.stringify(records));
 
-    // PDF generation using jsPDF
+    // jsPDF Generation
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
